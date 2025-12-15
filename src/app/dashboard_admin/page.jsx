@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center">
@@ -12,7 +14,7 @@ export default function AdminDashboard() {
         <p className="text-gray-600 mb-8">
           Halaman admin sedang dalam pengembangan
         </p>
-        <a 
+        <Link
           href="/"
           className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-all duration-200 shadow-md hover:shadow-lg"
         >
@@ -20,7 +22,7 @@ export default function AdminDashboard() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           Kembali ke Halaman Utama
-        </a>
+        </Link>
       </div>
     </div>
   );

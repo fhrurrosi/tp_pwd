@@ -17,13 +17,13 @@ export default function Home() {
 
           {/* Temporary Navigation - will be replaced with actual login */}
           <div className="space-y-3">
-            <a 
+            <a
               href="/ui_user/dashboard"
               className="block w-full px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold text-center hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
             >
               Login sebagai Pengguna
             </a>
-            <a 
+            <a
               href="/dashboard_admin"
               className="block w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold text-center hover:bg-gray-200 transition-all duration-200 border border-gray-300"
             >

@@ -1,40 +1,31 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Navigation from '../../components/nav_user';
 import Link from 'next/link';
 
 export default function ReservasiRuangan() {
-  // Man: State untuk mengontrol tanggal, bulan, pagination, dan filter modal
-  // tanggalTerpilih: Tanggal yang dipilih user di kalender (null jika belum pilih)
+  const hariIni = new Date();
+  const tanggalHariIni = hariIni.toISOString().split('T')[0];
+
   const [tanggalTerpilih, setTanggalTerpilih] = useState(null);
-  // bulanSaatIni: Bulan yang sedang ditampilkan di kalender (default: bulan sekarang)
-  const [bulanSaatIni, setBulanSaatIni] = useState(new Date());
-  // tanggalMinimum: Tanggal minimum yang bisa dipilih (hari ini)
-  const [tanggalMinimum, setTanggalMinimum] = useState('');
-  // halamanSaatIni: Halaman pagination yang sedang aktif
+
+  const [bulanSaatIni, setBulanSaatIni] = useState(
+    () => new Date(hariIni.getFullYear(), hariIni.getMonth(), 1)
+  );
+
+  const [tanggalMinimum] = useState(tanggalHariIni);
+
   const [halamanSaatIni, setHalamanSaatIni] = useState(1);
-  // ruanganPerHalaman: Jumlah ruangan yang ditampilkan per halaman (fixed: 6)
   const ruanganPerHalaman = 6;
-  // tampilkanModalFilter: Boolean untuk show/hide modal filter
+
   const [tampilkanModalFilter, setTampilkanModalFilter] = useState(false);
-  // filter: Object berisi kriteria filter (status, ruangan, tanggal)
+
   const [filter, setFilter] = useState({
     status: 'Tersedia',
     ruangan: '',
     tanggal: ''
   });
-
-  // Man: Mendapatkan tanggal hari ini
-  const hariIni = new Date();
-  const tanggalHariIni = hariIni.toISOString().split('T')[0];
-
-  // Man: Set minimum date saat komponen dimount
-  // Action: Set tanggalMinimum ke hari ini, set bulanSaatIni ke bulan sekarang
-  useEffect(() => {
-    setTanggalMinimum(tanggalHariIni);
-    setBulanSaatIni(new Date(hariIni.getFullYear(), hariIni.getMonth(), 1));
-  }, []);
 
   // Data contoh ruangan 
   // TODO: Integrate API untuk fetch data real dari database
@@ -132,11 +123,11 @@ export default function ReservasiRuangan() {
   const { hariDalamBulan, hariAwalMinggu } = dapatkanHariDalamBulan(bulanSaatIni);
 
   const namaBulan = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Augustus', 'September', 'Oktober', 'November', 'Desember'
   ];
 
-  const namaHari = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  const namaHari = ['M', 'S', 'S', 'R', 'K', 'J', 'S'];
 
   // Fungsi untuk navigasi ke bulan sebelumnya
   // Tidak bisa mundur ke bulan sebelum bulan saat ini

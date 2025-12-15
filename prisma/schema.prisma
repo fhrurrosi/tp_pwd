@@ -1,32 +1,14 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider  = "postgresql"
-}
-
-model Role {
-  id        Int      @id @default(autoincrement()) @map("role_id")
-  namaRole  String   @unique @map("nama_role") @db.VarChar(50)
-  deskripsi String?  @db.Text
-  createdAt DateTime @default(now()) @map("created_at")
-  
-  users User[]
-  
-  @@map("roles")
+  provider = "postgresql"
 }
 
 model User {
   id        Int       @id @default(autoincrement()) @map("user_id")
-  roleId    Int       @map("role_id")
+  role      String    @default("USER") @db.VarChar(20)
   nimNip    String    @unique @map("nim_nip") @db.VarChar(50)
   nama      String    @db.VarChar(100)
   email     String    @unique @db.VarChar(100)
@@ -35,10 +17,9 @@ model User {
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
-  
-  role      Role        @relation(fields: [roleId], references: [id])
+
   reservasi Reservasi[]
-  
+
   @@map("users")
 }
 
@@ -51,12 +32,13 @@ model Ruangan {
   ac          Boolean   @default(false)
   proyektor   Boolean   @default(false)
   papanTulis  Boolean   @default(false) @map("papan_tulis")
+
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")
-  
+
   reservasi Reservasi[]
-  
+
   @@map("ruangan")
 }
 
@@ -73,10 +55,9 @@ model Reservasi {
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
   deletedAt    DateTime? @map("deleted_at")
-  
   user    User    @relation(fields: [userId], references: [id])
   ruangan Ruangan @relation(fields: [ruanganId], references: [id])
-  
+
   @@unique([ruanganId, tanggalMulai, jamMulai, jamSelesai], name: "unique_booking")
   @@map("reservasi")
 }
