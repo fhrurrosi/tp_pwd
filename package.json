@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "test": "vitest",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -16,6 +17,7 @@
     "react-dom": "19.2.0"
   },
   "devDependencies": {
+    "vitest": "^0.34.3",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "25.0.1",
     "babel-plugin-react-compiler": "1.0.0",
