@@ -37,37 +37,31 @@ export default function RegisterPage() {
 
   function handleChange(e) {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-
-    if (name === "email") {
-      setValidation((prev) => ({ ...prev, emailValid: validateEmail(value) }));
-    }
-
-    if (name === "password") {
-      setValidation((prev) => ({
-        ...prev,
-        pwdScore: passwordStrength(value),
-      }));
-    }
 
     if (name === "phone") {
+      // Hanya angka
+      const numbersOnly = value.replace(/\D/g, "");
+      setForm((prev) => ({ ...prev, [name]: numbersOnly }));
+
       setValidation((prev) => ({
         ...prev,
         phoneTouched: true,
-        phoneValid: validatePhone(value),
+        phoneValid: validatePhone(numbersOnly),
       }));
+      return;
     }
 
     if (name === "id") {
-      const res = validateNIM(value);
+      const numbersOnly = value.replace(/\D/g, "");
+      setForm((prev) => ({ ...prev, [name]: numbersOnly }));
+
+      const res = validateNIM(numbersOnly);
       let error = "";
 
       if (!res.valid) {
         if (res.reason === "length") error = "NIM/NIP minimal 10 digit";
-        else if (res.reason === "year")
-          error = `Tahun tidak valid: ${res.year}`;
-        else if (res.reason === "prodi")
-          error = `Kode prodi tidak valid: ${res.prodi}`;
+        else if (res.reason === "year") error = `Tahun tidak valid: ${res.year}`;
+        else if (res.reason === "prodi") error = `Kode prodi tidak valid: ${res.prodi}`;
         else error = "Format NIM/NIP tidak valid";
       }
 
@@ -77,22 +71,33 @@ export default function RegisterPage() {
         idValid: res.valid,
         idError: error,
       }));
+      return;
+    }
+    setForm((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "email") {
+      setValidation((prev) => ({ ...prev, emailValid: validateEmail(value) }));
+    }
+
+    if (name === "password") {
+      setValidation((prev) => ({ ...prev, pwdScore: passwordStrength(value) }));
     }
   }
+
 
   const passwordsMatch = form.password === form.confirmPassword;
   const pwdLabel =
     validation.pwdScore <= 1
       ? "Lemah"
       : validation.pwdScore === 2
-      ? "Sedang"
-      : "Kuat";
+        ? "Sedang"
+        : "Kuat";
   const pwdColor =
     validation.pwdScore <= 1
       ? "bg-red-400"
       : validation.pwdScore === 2
-      ? "bg-amber-400"
-      : "bg-emerald-400";
+        ? "bg-amber-400"
+        : "bg-emerald-400";
 
   const isFormValid =
     form.id &&
@@ -256,9 +261,8 @@ export default function RegisterPage() {
                     {[1, 2, 3, 4].map((n) => (
                       <div
                         key={n}
-                        className={`h-2 transition-all ${
-                          n <= validation.pwdScore ? pwdColor : "bg-slate-200"
-                        } w-1/4`}
+                        className={`h-2 transition-all ${n <= validation.pwdScore ? pwdColor : "bg-slate-200"
+                          } w-1/4`}
                       />
                     ))}
                   </div>
@@ -293,11 +297,10 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={!isFormValid}
-                className={`w-full text-white font-semibold py-2 rounded-md shadow-sm transform transition duration-150 ease-in-out ${
-                  isFormValid
+                className={`w-full text-white font-semibold py-2 rounded-md shadow-sm transform transition duration-150 ease-in-out ${isFormValid
                     ? "bg-indigo-600 hover:bg-indigo-700 hover:-translate-y-1 hover:shadow-lg active:scale-95"
                     : "bg-slate-300 cursor-not-allowed"
-                }`}
+                  }`}
               >
                 Register
               </button>
