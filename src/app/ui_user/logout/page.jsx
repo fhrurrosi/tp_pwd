@@ -2,14 +2,17 @@
 
 import { useRouter } from 'next/navigation';
 import Navigation from '../../components/nav_user';
-
+import { signOut } from 'next-auth/react';
 export default function Logout() {
   // Man: Menggunakan router untuk navigasi programatik
   const router = useRouter();
 
   const logout = () => {
-    // Man: Redirect ke halaman login setelah logout
-    router.push('/');
+    signOut({
+      redirect: false, 
+    }).then(() => {
+      router.push('/login'); 
+    });
   };
 
   // Handler untuk membatalkan logout
@@ -21,7 +24,7 @@ export default function Logout() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
       <Navigation />
-      
+
       <main className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4" role="main" aria-label="Konfirmasi Logout">
         <div className="text-center">
           {/* Title */}
