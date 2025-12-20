@@ -1,0 +1,154 @@
+[
+  {
+    "id": 1,
+    "name": "Room 20",
+    "capacity": 20,
+    "location": "Gedung 4, lantai 2",
+    "status": true
+  },
+  {
+    "id": 2,
+    "name": "Room 21",
+    "capacity": 20,
+    "location": "Gedung 4, lantai 2",
+    "status": false
+  },
+  {
+    "id": 3,
+    "name": "Room 22",
+    "capacity": 20,
+    "location": "Gedung 4, lantai 2",
+    "status": true
+  },
+  {
+    "id": 4,
+    "name": "Room 23",
+    "capacity": 20,
+    "location": "Gedung 4, lantai 2",
+    "status": false
+  },
+  {
+    "id": 5,
+    "name": "Room 24",
+    "capacity": 20,
+    "location": "Gedung 4, lantai 2",
+    "status": true
+  },
+  {
+    "id": 6,
+    "name": "Room 25",
+    "capacity": 20,
+    "location": "Gedung 4, lantai 2",
+    "status": false
+  },
+  {
+    "id": 7,
+    "name": "Room 26",
+    "capacity": 18,
+    "location": "Gedung 1, lantai 1",
+    "status": true
+  },
+  {
+    "id": 8,
+    "name": "Room 27",
+    "capacity": 30,
+    "location": "Gedung 2, lantai 3",
+    "status": true
+  },
+  {
+    "id": 9,
+    "name": "Room 28",
+    "capacity": 12,
+    "location": "Gedung 3, lantai 1",
+    "status": false
+  },
+  {
+    "id": 10,
+    "name": "Room 29",
+    "capacity": 25,
+    "location": "Gedung 1, lantai 2",
+    "status": true
+  },
+  {
+    "id": 11,
+    "name": "Room 30",
+    "capacity": 20,
+    "location": "Gedung 4, lantai 3",
+    "status": true
+  },
+  {
+    "id": 12,
+    "name": "Room 31",
+    "capacity": 15,
+    "location": "Gedung 2, lantai 1",
+    "status": false
+  },
+  {
+    "id": 13,
+    "name": "Room 32",
+    "capacity": 20,
+    "location": "Gedung 4, lantai 1",
+    "status": true
+  },
+  {
+    "id": 14,
+    "name": "Room 33",
+    "capacity": 20,
+    "location": "Gedung 4, lantai 1",
+    "status": false
+  },
+  {
+    "id": 15,
+    "name": "Room 34",
+    "capacity": 20,
+    "location": "Gedung 4, lantai 2",
+    "status": true
+  },
+  {
+    "id": 16,
+    "name": "Room 35",
+    "capacity": 22,
+    "location": "Gedung 5, lantai 1",
+    "status": true
+  },
+  {
+    "id": 17,
+    "name": "Room 36",
+    "capacity": 10,
+    "location": "Gedung 3, lantai 2",
+    "status": false
+  },
+  {
+    "id": 18,
+    "name": "Room 37",
+    "capacity": 14,
+    "location": "Gedung 2, lantai 2",
+    "status": true
+  },
+  {
+    "id": 19,
+    "name": "Room 38",
+    "capacity": 28,
+    "location": "Gedung 1, lantai 4",
+    "status": true
+  },
+  {
+    "id": 20,
+    "name": "Room 39",
+    "capacity": 16,
+    "location": "Gedung 1, lantai 1",
+    "status": false
+  },
+  {
+    "id": 21,
+    "name": "BASIS DATA",
+    "capacity": 12,
+    "location": "KAMPUS 4, GEDUNG LAB, LANTAI 4",
+    "status": true,
+    "facilities": {
+      "ac": true,
+      "projector": true,
+      "whiteboard": true
+    }
+  }
+]
