@@ -4,9 +4,10 @@ import { redirect } from "next/navigation";
 
 export default async function Page() {
   const session = await getServerSession(authOptions);
-
+  if(!session) {
+    redirect("/login");
+  }
   if (session) {
-    // redirect berdasarkan role
     if (session.user.role === "admin") {
       redirect("/admin/dashboard");
     }
