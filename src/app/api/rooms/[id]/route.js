@@ -1,27 +1,59 @@
-import { promises as fs } from 'fs'
-import path from 'path'
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
 
-const DATA_PATH = path.join(process.cwd(), 'src', 'data', 'rooms.json')
-
-export async function PUT(req, { params }) {
+export async function GET(req, { params }) {
   try {
-    const id = Number(params.id)
-    const body = await req.json()
+    const resolvedParams = await params 
+    const id = parseInt(resolvedParams.id)
+    if (isNaN(id)) {
+      return NextResponse.json({ message: 'ID harus berupa angka' }, { status: 400 })
+    }
 
-    const content = await fs.readFile(DATA_PATH, 'utf-8')
-    const data = JSON.parse(content)
+    const room = await prisma.ruangan.findUnique({
+      where: { id: id }
+    })
 
-    const idx = data.findIndex((r) => r.id === id)
-    if (idx === -1) return new Response(JSON.stringify({ message: 'Room not found' }), { status: 404 })
+    if (!room) {
+      return NextResponse.json({ message: 'Ruangan tidak ditemukan' }, { status: 404 })
+    }
 
-    // merge fields
-    data[idx] = { ...data[idx], ...body }
+    return NextResponse.json(room, { status: 200 })
+  } catch (error) {
+    return NextResponse.json({ message: 'Server Error', error: error.message }, { status: 500 })
+  }
+}
 
-    await fs.writeFile(DATA_PATH, JSON.stringify(data, null, 2), 'utf-8')
+export async function PATCH(req, { params }) {
+  try {
+    const resolvedParams = await params
+    const id = parseInt(resolvedParams.id)
+    
+    const payload = await req.json()
+    const facilities = payload.facilities || {}
 
-    return new Response(JSON.stringify(data[idx]), { status: 200 })
-  } catch (err) {
-    console.error(err)
-    return new Response(JSON.stringify({ message: 'Failed to update room' }), { status: 500 })
+
+    const existingRoom = await prisma.ruangan.findUnique({ where: { id: id } })
+    if (!existingRoom) {
+        return NextResponse.json({ message: 'Ruangan tidak ditemukan' }, { status: 404 })
+    }
+
+    const updatedRoom = await prisma.ruangan.update({
+      where: { id: id },
+      data: {
+        namaRuangan: payload.name,
+        lokasi: payload.location,
+        kapasitas: Number(payload.capacity),
+        ac: facilities.ac,
+        proyektor: facilities.projector,
+        papanTulis: facilities.whiteboard,
+    
+        ...(payload.status && { status: payload.status })
+      }
+    })
+
+    return NextResponse.json(updatedRoom, { status: 200 })
+  } catch (error) {
+    console.error("🔥 Error PATCH Room:", error)
+    return NextResponse.json({ message: 'Gagal update data', error: error.message }, { status: 500 })
   }
 }

@@ -60,22 +60,22 @@ export default function Page() {
         <form onSubmit={onSave} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-black mb-1">Nama Ruangan</label>
-            <input name="name" value={form.name} onChange={handleChange} placeholder="Masukkan" className="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+            <input name="name" value={form.name}  onChange={handleChange} placeholder="Masukkan" className="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 text-black focus:ring-indigo-400" />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-black mb-1">Lokasi</label>
-            <input name="location" value={form.location} onChange={handleChange} placeholder="Masukkan" className="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+            <input name="location" value={form.location} onChange={handleChange} placeholder="Masukkan" className="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none  text-black focus:ring-2 focus:ring-indigo-400" />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-black mb-1">Kapasitas</label>
-            <input name="capacity" value={form.capacity} onChange={handleChange} type="number" placeholder="Masukkan" className="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+            <input name="capacity" value={form.capacity} onChange={handleChange} type="number" placeholder="Masukkan" className="w-full rounded-md border border-slate-200 px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-indigo-400" />
           </div>
 
           <fieldset>
             <legend className="text-sm font-medium text-black mb-2">Fasilitas Pendukung :</legend>
-            <div className="flex flex-col gap-2">
+            <div className="flex text-black flex-col gap-2">
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="ac" checked={form.facilities.ac} onChange={handleChange} /> AC</label>
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="projector" checked={form.facilities.projector} onChange={handleChange} /> Projector</label>
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="whiteboard" checked={form.facilities.whiteboard} onChange={handleChange} /> Whiteboard</label>
