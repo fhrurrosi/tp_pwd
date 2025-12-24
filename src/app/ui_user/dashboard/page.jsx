@@ -6,54 +6,54 @@ import TabelRuanganTersedia from './ruangan_tersedia';
 import TabelRuanganSkeleton from '../../components/TableRuanganSkeleton';
 
 export default function DashboardUser() {
+  // State untuk data ruangan
+  const [daftarRuangan, setDaftarRuangan] = useState([]);
+  
+  // State pagination & loading
   const [halamanSaatIni, setHalamanSaatIni] = useState(1);
   const [loading, setLoading] = useState(true);
 
   const ruanganPerHalaman = 6;
-
   const hariIni = new Date();
-  const tanggalHariIni = hariIni.toISOString().split('T')[0];
 
-  const semuaRuanganTersedia = [
-    { name: 'Room 22', date: tanggalHariIni, time: '10.30-12.10', status: 'tersedia', action: 'Ajukan Peminjaman' },
-    { name: 'Room 34', date: tanggalHariIni, time: '10.30-12.10', status: 'tersedia', action: 'Ajukan Peminjaman' },
-    { name: 'Room 32', date: tanggalHariIni, time: '10.30-12.10', status: 'tersedia', action: 'Ajukan Peminjaman' },
-    { name: 'Room 20', date: tanggalHariIni, time: '10.30-12.10', status: 'tersedia', action: 'Ajukan Peminjaman' },
-    { name: 'Room 19', date: tanggalHariIni, time: '10.30-12.10', status: 'tersedia', action: 'Ajukan Peminjaman' },
-    { name: 'Room 51', date: tanggalHariIni, time: '10.30-12.10', status: 'tersedia', action: 'Ajukan Peminjaman' },
-    { name: 'Room 52', date: tanggalHariIni, time: '10.30-12.10', status: 'tersedia', action: 'Ajukan Peminjaman' },
-    { name: 'Room 53', date: tanggalHariIni, time: '10.30-12.10', status: 'tersedia', action: 'Ajukan Peminjaman' },
-    { name: 'Room 54', date: tanggalHariIni, time: '10.30-12.10', status: 'tersedia', action: 'Ajukan Peminjaman' },
-    { name: 'Room 55', date: tanggalHariIni, time: '10.30-12.10', status: 'tersedia', action: 'Ajukan Peminjaman' },
-    { name: 'Room 56', date: tanggalHariIni, time: '10.30-12.10', status: 'tersedia', action: 'Ajukan Peminjaman' },
-    { name: 'Room 57', date: tanggalHariIni, time: '10.30-12.10', status: 'tersedia', action: 'Ajukan Peminjaman' },
-    { name: 'Room 58', date: tanggalHariIni, time: '10.30-12.10', status: 'tersedia', action: 'Ajukan Peminjaman' },
-    { name: 'Room 59', date: tanggalHariIni, time: '10.30-12.10', status: 'tersedia', action: 'Ajukan Peminjaman' },
-    { name: 'Room 60', date: tanggalHariIni, time: '10.30-12.10', status: 'tersedia', action: 'Ajukan Peminjaman' },
-    { name: 'Room 61', date: tanggalHariIni, time: '10.30-12.10', status: 'tersedia', action: 'Ajukan Peminjaman' },
-  ];
+  // --- BAGIAN FETCHING DATA ---
+  useEffect(() => {
+    async function fetchRuangan() {
+      setLoading(true);
+      try {
+        const res = await fetch('/api/rooms/available');
+        const result = await res.json();
+        
+        if (result.success) {
+          setDaftarRuangan(result.data);
+        } else {
+          console.error("Gagal mengambil data:", result.message);
+          setDaftarRuangan([]);
+        }
+      } catch (error) {
+        console.error("Error fetching:", error);
+      } finally {
+        // Matikan loading setelah fetch selesai
+        setLoading(false);
+      }
+    }
 
-  const totalHalaman = Math.ceil(semuaRuanganTersedia.length / ruanganPerHalaman);
+    fetchRuangan();
+  }, []); 
+  // Dependency array kosong [] artinya fetch hanya jalan sekali saat halaman dibuka
+
+  // --- LOGIKA PAGINATION ---
+  const totalHalaman = Math.ceil(daftarRuangan.length / ruanganPerHalaman);
   const indeksAwal = (halamanSaatIni - 1) * ruanganPerHalaman;
   const indeksAkhir = indeksAwal + ruanganPerHalaman;
-  const ruanganTerpaginasi = semuaRuanganTersedia.slice(indeksAwal, indeksAkhir);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 600);
-
-    return () => clearTimeout(timer);
-  }, [halamanSaatIni]);
-
+  const ruanganTerpaginasi = daftarRuangan.slice(indeksAwal, indeksAkhir);
 
   const tanganiPerubahanHalaman = (halaman) => {
     if (halaman >= 1 && halaman <= totalHalaman) {
-      setLoading(true);
       setHalamanSaatIni(halaman);
+      // Opsional: Scroll ke atas tabel saat ganti halaman
     }
   };
-
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-blue-50">
@@ -81,7 +81,8 @@ export default function DashboardUser() {
           <TabelRuanganSkeleton rows={ruanganPerHalaman} />
         ) : (
           <TabelRuanganTersedia
-            ruangan={ruanganTerpaginasi}
+            // Gunakan data dari state, bukan variabel hardcode
+            ruangan={ruanganTerpaginasi} 
             halamanSaatIni={halamanSaatIni}
             totalHalaman={totalHalaman}
             padaPerubahanHalaman={tanganiPerubahanHalaman}
