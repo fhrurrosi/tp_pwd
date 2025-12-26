@@ -6,15 +6,30 @@ import Swal from "sweetalert2"
 
 export default function Page() {
   const router = useRouter()
-  const [form, setForm] = useState({ name: "", location: "", capacity: "", facilities: { ac: false, projector: false, whiteboard: false } })
+  
+  // State Form (Langsung ada jamMulai dan jamSelesai)
+  const [form, setForm] = useState({ 
+    name: "", 
+    location: "", 
+    capacity: "", 
+    jamMulai: "07:00",   // Default jam pagi
+    jamSelesai: "09:00", // Default durasi 2 jam
+    facilities: { ac: false, projector: false, whiteboard: false } 
+  })
+
   const [saving, setSaving] = useState(false)
 
+  // Handler Input
   function handleChange(e) {
     const { name, value, type, checked } = e.target
+    
+    // Handle Checkbox Fasilitas
     if (name in form.facilities) {
       setForm((p) => ({ ...p, facilities: { ...p.facilities, [name]: checked } }))
       return
     }
+    
+    // Handle Input Biasa
     setForm((p) => ({ ...p, [name]: type === 'number' ? Number(value) : value }))
   }
 
@@ -26,10 +41,13 @@ export default function Page() {
     e.preventDefault()
     setSaving(true)
     try {
+      // Payload Simple (Tidak ada array sessions lagi)
       const payload = {
         name: form.name,
         location: form.location,
         capacity: Number(form.capacity) || 0,
+        jamMulai: form.jamMulai,     // Kirim Jam
+        jamSelesai: form.jamSelesai, // Kirim Jam
         status: true,
         facilities: form.facilities,
       }
@@ -57,34 +75,85 @@ export default function Page() {
       <div className="max-w-3xl mx-auto bg-white rounded-lg p-6 shadow">
         <h1 className="text-2xl font-semibold text-black mb-6">Tambahkan Ruangan</h1>
 
-        <form onSubmit={onSave} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-black mb-1">Nama Ruangan</label>
-            <input name="name" value={form.name}  onChange={handleChange} placeholder="Masukkan" className="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 text-black focus:ring-indigo-400" />
+        <form onSubmit={onSave} className="space-y-6">
+          
+          {/* INFORMASI DASAR */}
+          <div className="space-y-4 border-b border-slate-100 pb-6">
+            <h3 className="text-lg font-medium text-slate-800">Informasi Ruangan</h3>
+            
+            <div>
+              <label className="block text-sm font-medium text-black mb-1">Nama Ruangan (Sesi)</label>
+              <input 
+                name="name" 
+                value={form.name} 
+                onChange={handleChange} 
+                placeholder="Contoh: Lab Komdas (Sesi Pagi)" 
+                className="w-full rounded-md border border-slate-200 px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-indigo-400" 
+                required 
+              />
+          
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-black mb-1">Lokasi</label>
+                <input name="location" value={form.location} onChange={handleChange} placeholder="Lantai 2" className="w-full rounded-md border border-slate-200 px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-indigo-400" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-black mb-1">Kapasitas</label>
+                <input name="capacity" value={form.capacity} onChange={handleChange} type="number" placeholder="0" className="w-full rounded-md border border-slate-200 px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-indigo-400" required />
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-black mb-1">Lokasi</label>
-            <input name="location" value={form.location} onChange={handleChange} placeholder="Masukkan" className="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none  text-black focus:ring-2 focus:ring-indigo-400" />
+          {/* JAM OPERASIONAL (Simple Inputs) */}
+          <div className="space-y-4 border-b border-slate-100 pb-6">
+            <h3 className="text-lg font-medium text-slate-800">Waktu Operasional</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-black mb-1">Jam Mulai</label>
+                <input 
+                  type="time" 
+                  name="jamMulai" 
+                  value={form.jamMulai} 
+                  onChange={handleChange} 
+                  className="w-full rounded-md border border-slate-200 px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-indigo-400" 
+                  required 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-black mb-1">Jam Selesai</label>
+                <input 
+                  type="time" 
+                  name="jamSelesai" 
+                  value={form.jamSelesai} 
+                  onChange={handleChange} 
+                  className="w-full rounded-md border border-slate-200 px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-indigo-400" 
+                  required 
+                />
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-black mb-1">Kapasitas</label>
-            <input name="capacity" value={form.capacity} onChange={handleChange} type="number" placeholder="Masukkan" className="w-full rounded-md border border-slate-200 px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-          </div>
-
+          {/* FASILITAS */}
           <fieldset>
-            <legend className="text-sm font-medium text-black mb-2">Fasilitas Pendukung :</legend>
-            <div className="flex text-black flex-col gap-2">
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="ac" checked={form.facilities.ac} onChange={handleChange} /> AC</label>
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="projector" checked={form.facilities.projector} onChange={handleChange} /> Projector</label>
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="whiteboard" checked={form.facilities.whiteboard} onChange={handleChange} /> Whiteboard</label>
+            <legend className="text-sm font-medium text-black mb-2">Fasilitas Pendukung</legend>
+            <div className="flex text-black flex-wrap gap-4">
+              <label className="flex items-center gap-2 text-sm bg-white border px-3 py-2 rounded cursor-pointer hover:bg-slate-50">
+                <input type="checkbox" name="ac" checked={form.facilities.ac} onChange={handleChange} /> AC
+              </label>
+              <label className="flex items-center gap-2 text-sm bg-white border px-3 py-2 rounded cursor-pointer hover:bg-slate-50">
+                <input type="checkbox" name="projector" checked={form.facilities.projector} onChange={handleChange} /> Projector
+              </label>
+              <label className="flex items-center gap-2 text-sm bg-white border px-3 py-2 rounded cursor-pointer hover:bg-slate-50">
+                <input type="checkbox" name="whiteboard" checked={form.facilities.whiteboard} onChange={handleChange} /> Whiteboard
+              </label>
             </div>
           </fieldset>
 
-          <div className="flex items-center justify-center gap-4 mt-6">
-            <button type="button" onClick={onCancel} className="px-6 py-2 rounded-md bg-slate-200 text-sm">Batal</button>
-            <button type="submit" disabled={saving} className="px-6 py-2 rounded-md bg-indigo-600 text-white text-sm">{saving ? 'Menyimpan...' : 'Simpan'}</button>
+          <div className="flex items-center justify-end gap-4 mt-8 pt-4 border-t border-slate-100">
+            <button type="button" onClick={onCancel} className="px-6 py-2 rounded-md bg-white border border-slate-300 text-slate-700 text-sm hover:bg-slate-50">Batal</button>
+            <button type="submit" disabled={saving} className="px-6 py-2 rounded-md bg-indigo-600 text-white text-sm hover:bg-indigo-700 shadow-sm">{saving ? 'Menyimpan...' : 'Simpan Ruangan'}</button>
           </div>
         </form>
       </div>
