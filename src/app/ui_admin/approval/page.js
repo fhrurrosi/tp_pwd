@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Swal from "sweetalert2"; // Pastikan install sweetalert2
+import Swal from "sweetalert2"; 
 
 export default function HalamanPersetujuanAdmin() {
   const hariIni = new Date();
@@ -9,21 +9,15 @@ export default function HalamanPersetujuanAdmin() {
   const bulanSekarang = hariIni.getMonth();
   const pad = (n) => String(n).padStart(2, "0");
 
-  // --- STATE ---
   const [bulanSaatIni, setBulanSaatIni] = useState(new Date(tahunSekarang, bulanSekarang, 1));
-  
-  // Default tanggal null supaya user memilih dulu, atau bisa di-set ke hari ini
   const [tanggalTerpilih, setTanggalTerpilih] = useState(hariIni.getDate());
   
   const [selectedDetail, setSelectedDetail] = useState(null);
   const [listReservasi, setListReservasi] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // --- 1. FETCH DATA DARI API ---
   useEffect(() => {
     async function fetchData() {
-      if (!tanggalTerpilih) return;
-
       setLoading(true);
       try {
         const year = bulanSaatIni.getFullYear();
@@ -31,7 +25,6 @@ export default function HalamanPersetujuanAdmin() {
         const day = pad(tanggalTerpilih);
         const dateStr = `${year}-${month}-${day}`;
 
-        // Panggil API dengan filter tanggal
         const res = await fetch(`/api/admin/reservasi?date=${dateStr}`, {
            cache: 'no-store'
         });
@@ -51,9 +44,8 @@ export default function HalamanPersetujuanAdmin() {
     }
 
     fetchData();
-  }, [tanggalTerpilih, bulanSaatIni]); // Refresh saat tanggal/bulan ganti
+  }, [tanggalTerpilih, bulanSaatIni]); 
 
-  // --- 2. HANDLE APPROVE / REJECT ---
   const handleStatusChange = async (id, newStatus) => {
     try {
       const res = await fetch('/api/admin/reservasi', {
@@ -64,16 +56,17 @@ export default function HalamanPersetujuanAdmin() {
 
       if (!res.ok) throw new Error("Gagal update");
 
-      // Update State Lokal biar gak perlu refresh
       setListReservasi(prev => prev.map(item => 
         item.id === id ? { ...item, status: newStatus } : item
       ));
 
-      setSelectedDetail(null); // Tutup modal
+      setSelectedDetail(null); 
+      
+      const statusIndo = newStatus === 'Approved' ? 'Disetujui' : 'Ditolak';
       
       Swal.fire({
         icon: 'success',
-        title: `Berhasil diubah ke ${newStatus}`,
+        title: `Berhasil ${statusIndo}`,
         timer: 1500,
         showConfirmButton: false
       });
@@ -83,8 +76,6 @@ export default function HalamanPersetujuanAdmin() {
     }
   };
 
-
-  // --- HELPER KALENDER ---
   const namaBulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
   const namaHari = ["M","S","S","R","K","J","S"];
 
@@ -106,7 +97,6 @@ export default function HalamanPersetujuanAdmin() {
     return `${bulanSaatIni.getFullYear()}-${pad(bulanSaatIni.getMonth() + 1)}-${pad(tanggalTerpilih)}`;
   };
 
-  // Helper untuk Link Dokumen Supabase
   const getDokumenUrl = (path) => {
     if (!path) return null;
     return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/dokumen-peminjaman/${path}`;
@@ -120,7 +110,6 @@ export default function HalamanPersetujuanAdmin() {
 
         <div className="grid grid-cols-1 md:grid-cols-10 gap-6">
           
-          {/* --- KOLOM KIRI: KALENDER --- */}
           <div className="md:col-span-3">
             <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 sticky top-6">
               <div className="flex items-center justify-between mb-4">
@@ -160,7 +149,6 @@ export default function HalamanPersetujuanAdmin() {
             </div>
           </div>
 
-          {/* --- KOLOM KANAN: LIST RESERVASI --- */}
           <div className="md:col-span-7">
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-h-[400px]">
               <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
@@ -210,9 +198,12 @@ export default function HalamanPersetujuanAdmin() {
                             <span className={`inline-flex px-2 py-1 rounded text-xs font-semibold ${
                               item.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' :
                               item.status === 'Rejected' ? 'bg-red-100 text-red-700' :
-                              'bg-amber-100 text-amber-700' // Pending
+                              'bg-amber-100 text-amber-700' 
                             }`}>
-                              {item.status}
+                          
+                              {item.status === 'Approved' ? 'Disetujui' : 
+                               item.status === 'Rejected' ? 'Ditolak' : 
+                               item.status}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">
@@ -233,21 +224,19 @@ export default function HalamanPersetujuanAdmin() {
           </div>
         </div>
       </div>
-
-      {/* --- MODAL DETAIL --- */}
+      
       {selectedDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={() => setSelectedDetail(null)} />
           
           <div className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all scale-100">
-            {/* Modal Header */}
             <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                <h3 className="font-bold text-slate-800 text-lg">Detail Pengajuan</h3>
                <button onClick={() => setSelectedDetail(null)} className="text-slate-400 hover:text-slate-600">✕</button>
             </div>
 
             <div className="p-6 space-y-4">
-               {/* Info Grid */}
+
                <div className="grid grid-cols-3 gap-y-4 text-sm">
                   <div className="text-slate-500 font-medium">ID Reservasi</div>
                   <div className="col-span-2 text-slate-900">#{selectedDetail.id}</div>
@@ -284,14 +273,15 @@ export default function HalamanPersetujuanAdmin() {
                   </div>
                </div>
 
-               {/* Action Buttons */}
                <div className="mt-8 pt-4 border-t border-slate-100 flex justify-end gap-3">
+                
                   <button 
                     onClick={() => handleStatusChange(selectedDetail.id, 'Rejected')}
                     className="px-4 py-2 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 font-medium transition-colors"
                   >
                     Tolak Pengajuan
                   </button>
+                 
                   <button 
                     onClick={() => handleStatusChange(selectedDetail.id, 'Approved')}
                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium shadow-sm transition-colors"

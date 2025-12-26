@@ -1,18 +1,13 @@
-// src/app/api/admin/reservasi/route.js
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export const dynamic = 'force-dynamic'; // Selalu data terbaru
-
-// GET: Ambil Semua Reservasi (Bisa difilter tanggal dari frontend)
+export const dynamic = 'force-dynamic'; 
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const dateParam = searchParams.get('date'); // Format: YYYY-MM-DD
+    const dateParam = searchParams.get('date');
 
     const whereCondition = {};
-    
-    // Jika ada parameter tanggal, filter berdasarkan tanggalBooking
     if (dateParam) {
       const targetDate = new Date(dateParam + "T00:00:00.000Z");
       whereCondition.tanggalBooking = targetDate;
@@ -21,10 +16,10 @@ export async function GET(req) {
     const reservasi = await prisma.reservasi.findMany({
       where: whereCondition,
       include: {
-        user: { select: { nama: true, nimNip: true } },     // Ambil nama user
-        ruangan: { select: { namaRuangan: true, jamMulai: true, jamSelesai: true } } // Ambil nama ruangan
+        user: { select: { nama: true, nimNip: true } }, 
+        ruangan: { select: { namaRuangan: true, jamMulai: true, jamSelesai: true } } 
       },
-      orderBy: { createdAt: 'desc' } // Yang terbaru paling atas
+      orderBy: { createdAt: 'desc' } 
     });
 
     return NextResponse.json({ success: true, data: reservasi });

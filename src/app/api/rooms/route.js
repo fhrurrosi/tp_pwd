@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET Method (Biarkan tetap sama seperti sebelumnya)
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
@@ -35,20 +34,17 @@ export async function GET(req) {
   }
 }
 
-// POST Method (YANG DIPERBAIKI)
 export async function POST(req) {
   try {
     const payload = await req.json();
     const facilities = payload.facilities || {};
     
-    // Validasi
     if (!payload.name || !payload.location) {
       return NextResponse.json({ message: "Nama dan Lokasi wajib diisi" }, { status: 400 });
     }
 
     const statusString = payload.status ? "Tersedia" : "Tidak Tersedia";
 
-    // CREATE RUANGAN (TANPA TABEL SESI LAGI)
     const newRoom = await prisma.ruangan.create({
       data: {
         namaRuangan: payload.name,
@@ -56,7 +52,7 @@ export async function POST(req) {
         kapasitas: Number(payload.capacity),
         status: statusString,
         
-        // Simpan Jam Langsung Disini
+
         jamMulai: payload.jamMulai || "08:00",
         jamSelesai: payload.jamSelesai || "17:00",
 

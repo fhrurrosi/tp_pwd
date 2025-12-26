@@ -2,35 +2,51 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Swal from 'sweetalert2'; 
+import Swal from 'sweetalert2';
 import Navigation from '../../components/nav_user';
-import { supabase } from '@/lib/supabaseClient'; // Import Supabase Client
+import { supabase } from '@/lib/supabaseClient';
+
+// 1. IMPORT USE SESSION
+import { useSession } from "next-auth/react";
 
 export default function HalamanFormPeminjaman() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
-  // Ambil ID dan Tanggal dari URL
+
+  // 2. AMBIL SESSION DATA
+  const { data: session, status } = useSession();
+
   const ruanganIdParam = searchParams.get('ruanganId');
   const tanggalParam = searchParams.get('tanggal');
 
-  // State Data Ruangan (Fetch dari DB)
   const [roomDetails, setRoomDetails] = useState(null);
   const [loadingRoom, setLoadingRoom] = useState(true);
 
-  // State Form Input User
   const [formData, setFormData] = useState({
     keperluan: '',
-    dokumen: null, // Menyimpan Object File
+    dokumen: null,
   });
 
   const [submitting, setSubmitting] = useState(false);
 
-  // 1. Fetch Detail Ruangan saat halaman dimuat
+  // 3. CEK LOGIN (LOGIC ONLY)
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Akses Ditolak',
+        text: 'Anda harus login untuk melakukan peminjaman.',
+        confirmButtonColor: '#2563EB'
+      }).then(() => {
+        router.push("/login");
+      });
+    }
+  }, [status, router]);
+
   useEffect(() => {
     async function getRoomDetails() {
       if (!ruanganIdParam) return;
-      
+
       try {
         const res = await fetch(`/api/rooms/${ruanganIdParam}`);
         const data = await res.json();
@@ -49,30 +65,34 @@ export default function HalamanFormPeminjaman() {
     getRoomDetails();
   }, [ruanganIdParam]);
 
-  // Handler Input Text
   const tanganiPerubahan = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handler File
   const tanganiPerubahanFile = (e) => {
     const file = e.target.files[0];
     setFormData(prev => ({ ...prev, dokumen: file }));
   };
 
-  // Handler Submit (Upload + Simpan)
   const tanganiSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
 
-    const userId = 1; // Nanti ganti dengan session user asli
+    // 4. AMBIL USER ID DARI SESSION (MENGGANTIKAN const userId = 1)
+    if (!session || !session.user) {
+        Swal.fire("Error", "Sesi user tidak valid. Silakan login ulang.", "error");
+        setSubmitting(false);
+        return;
+    }
+    const userId = session.user.id; 
 
     try {
       let dokumenUrl = null;
       if (formData.dokumen) {
         const file = formData.dokumen;
         const fileExt = file.name.split('.').pop();
+        // Nama file pakai userId yang dinamis
         const fileName = `${userId}-${Date.now()}.${fileExt}`;
         const filePath = `uploads/${fileName}`;
 
@@ -85,15 +105,15 @@ export default function HalamanFormPeminjaman() {
           throw new Error("Gagal upload dokumen: " + uploadError.message);
         }
 
-        dokumenUrl = uploadData.path; 
+        dokumenUrl = uploadData.path;
       }
 
       const payload = {
         ruanganId: ruanganIdParam,
-        userId: userId, 
+        userId: userId, // Kirim ID asli
         tanggal: tanggalParam,
         keperluan: formData.keperluan,
-        dokumenPath: dokumenUrl 
+        dokumenPath: dokumenUrl
       };
 
       const res = await fetch('/api/reservasi', {
@@ -111,14 +131,13 @@ export default function HalamanFormPeminjaman() {
         throw new Error(result.message || "Gagal mengajukan peminjaman");
       }
 
-      // Sukses
       await Swal.fire({
         title: "Berhasil!",
         text: "Peminjaman berhasil diajukan.",
         icon: "success",
         confirmButtonColor: "#2563EB"
       });
-      
+
       router.push('/ui_user/dashboard');
 
     } catch (error) {
@@ -134,8 +153,7 @@ export default function HalamanFormPeminjaman() {
     }
   };
 
-  // Tampilan Loading
-  if (loadingRoom) {
+  if (loadingRoom || status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -143,14 +161,15 @@ export default function HalamanFormPeminjaman() {
     );
   }
 
+  // Jika tidak ada session (dan proses redirect belum selesai), return null agar tidak flash konten
+  if (status === "unauthenticated") return null;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      
+
       <main className="max-w-4xl mx-auto px-6 py-10">
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          
-          {/* Header Biru */}
           <div className="bg-blue-600 px-8 py-6">
             <h1 className="text-2xl font-bold text-white tracking-wide">Konfirmasi Peminjaman</h1>
             <p className="text-blue-100 text-sm mt-1">Pastikan detail ruangan dan tanggal sudah sesuai.</p>
@@ -158,11 +177,7 @@ export default function HalamanFormPeminjaman() {
 
           <div className="p-8">
             <form onSubmit={tanganiSubmit} className="space-y-8">
-              
-              {/* --- INFO READ ONLY (TAMPILAN LAMA DIKEMBALIKAN) --- */}
               <div className="bg-blue-50/50 p-6 rounded-xl border border-blue-100 space-y-4">
-                
-                {/* Nama Ruangan */}
                 <div className="grid grid-cols-1 md:grid-cols-3 md:items-center gap-2">
                   <label className="text-sm font-bold text-gray-500 uppercase tracking-wider">Ruangan</label>
                   <div className="md:col-span-2 text-xl font-bold text-gray-800">
@@ -171,20 +186,17 @@ export default function HalamanFormPeminjaman() {
                 </div>
 
                 <div className="h-px bg-blue-200/50 w-full"></div>
-
-                {/* Tanggal Booking */}
                 <div className="grid grid-cols-1 md:grid-cols-3 md:items-center gap-2">
                   <label className="text-sm font-bold text-gray-500 uppercase tracking-wider">Tanggal</label>
                   <div className="md:col-span-2 text-lg font-semibold text-gray-800">
-                    {tanggalParam 
-                      ? new Date(tanggalParam).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) 
+                    {tanggalParam
+                      ? new Date(tanggalParam).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
                       : '-'}
                   </div>
                 </div>
 
                 <div className="h-px bg-blue-200/50 w-full"></div>
 
-                {/* Jam Operasional */}
                 <div className="grid grid-cols-1 md:grid-cols-3 md:items-center gap-2">
                   <label className="text-sm font-bold text-gray-500 uppercase tracking-wider">Waktu Sesi</label>
                   <div className="md:col-span-2">
@@ -195,11 +207,7 @@ export default function HalamanFormPeminjaman() {
                   </div>
                 </div>
               </div>
-
-              {/* --- FORM INPUT USER --- */}
               <div className="space-y-6">
-                
-                {/* Keperluan */}
                 <div>
                   <label className="block text-gray-700 font-bold mb-2 text-lg">Keperluan Peminjaman</label>
                   <textarea
@@ -208,12 +216,10 @@ export default function HalamanFormPeminjaman() {
                     value={formData.keperluan}
                     onChange={tanganiPerubahan}
                     className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900 text-lg placeholder-gray-400"
-                    placeholder="Contoh: Mengadakan kelas pengganti"
+                    placeholder="Contoh: Rapat Koordinasi Proyek"
                     required
                   />
                 </div>
-
-                {/* Upload Dokumen */}
                 <div>
                   <label className="block text-gray-700 font-bold mb-2 text-lg">
                     Dokumen Pendukung <span className="text-gray-400 font-normal text-sm">(Opsional)</span>
@@ -242,7 +248,6 @@ export default function HalamanFormPeminjaman() {
                 </div>
               </div>
 
-              {/* Buttons */}
               <div className="flex flex-col md:flex-row gap-4 pt-4">
                 <button
                   type="button"

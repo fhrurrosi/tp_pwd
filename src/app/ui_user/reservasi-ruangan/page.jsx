@@ -126,8 +126,7 @@ export default function ReservasiRuangan() {
       <Navigation />
 
       <main className="max-w-7xl mx-auto px-6 py-10">
-        
-        {/* HEADER */}
+
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Reservasi Ruangan</h1>
           <p className="text-gray-500 mt-2">Pilih tanggal untuk melihat ketersediaan ruangan.</p>
@@ -135,7 +134,6 @@ export default function ReservasiRuangan() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* --- KOLOM KIRI: KALENDER --- */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-6">
               <div className="flex items-center justify-between mb-6">
@@ -165,7 +163,7 @@ export default function ReservasiRuangan() {
                       onClick={() => {
                           setTanggalTerpilih(day);
                           setHalamanSaatIni(1);
-                          setSearchTerm(''); // Reset search saat ganti tanggal
+                          setSearchTerm('');
                       }}
                       disabled={disabled}
                       className={`
@@ -181,11 +179,8 @@ export default function ReservasiRuangan() {
               </div>
             </div>
           </div>
-
-          {/* --- KOLOM KANAN: LIST RUANGAN --- */}
           <div className="lg:col-span-2 space-y-6">
             
-            {/* SEARCH BAR (Pengganti Filter Modal) */}
             <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
                <div className="flex-1 relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -207,7 +202,6 @@ export default function ReservasiRuangan() {
                </div>
             </div>
 
-            {/* CONTENT AREA */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[400px]">
               
               {!tanggalTerpilih ? (
@@ -267,8 +261,6 @@ export default function ReservasiRuangan() {
                       </tbody>
                     </table>
                   </div>
-
-                  {/* PAGINATION */}
                   {totalHalaman > 1 && (
                     <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
                       <button 
