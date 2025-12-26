@@ -13,11 +13,8 @@ model User {
   nama      String    @db.VarChar(100)
   email     String    @unique @db.VarChar(100)
   password  String    @db.VarChar(255)
-  noTelepon String?   @map("no_telepon") @db.VarChar(20)
+  noTelepon String   @map("no_telepon") @db.VarChar(20)
   createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
-
   reservasi Reservasi[]
 
   @@map("users")
@@ -25,39 +22,35 @@ model User {
 
 model Ruangan {
   id          Int       @id @default(autoincrement()) @map("ruangan_id")
-  namaRuangan String    @map("nama_ruangan") @db.VarChar(100)
+  
+  namaRuangan String    @map("nama_ruangan") @db.VarChar(100) 
   lokasi      String    @db.VarChar(100)
   kapasitas   Int
   status      String    @default("Tersedia") @db.VarChar(20)
+  jamMulai    String    @default("08:00") @map("jam_mulai") 
+  jamSelesai  String    @default("10:00") @map("jam_selesai")
   ac          Boolean   @default(false)
   proyektor   Boolean   @default(false)
   papanTulis  Boolean   @default(false) @map("papan_tulis")
-
   createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")
-
-  reservasi Reservasi[]
+  reservasi   Reservasi[]
 
   @@map("ruangan")
 }
 
 model Reservasi {
-  id           Int       @id @default(autoincrement()) @map("reservasi_id")
-  userId       Int       @map("user_id")
-  ruanganId    Int       @map("ruangan_id")
-  tanggalMulai DateTime  @map("tanggal_mulai") @db.Date
-  jamMulai     DateTime  @map("jam_mulai") @db.Time
-  jamSelesai   DateTime  @map("jam_selesai") @db.Time
-  keperluan    String    @db.VarChar(255)
-  status       String    @default("Pending") @db.VarChar(20)
-  dokumenPath  String?   @map("dokumen_path") @db.VarChar(255)
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
-  deletedAt    DateTime? @map("deleted_at")
-  user    User    @relation(fields: [userId], references: [id])
-  ruangan Ruangan @relation(fields: [ruanganId], references: [id])
+  id            Int       @id @default(autoincrement()) @map("reservasi_id")
+  userId        Int       @map("user_id")
+  ruanganId     Int       @map("ruangan_id")
+  tanggalBooking DateTime  @map("tanggal_booking") @db.Date 
+  keperluan     String    @db.VarChar(255)
+  status        String    @default("Pending") @db.VarChar(20)
+  dokumenPath   String?   @map("dokumen_path") @db.VarChar(255)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  user          User      @relation(fields: [userId], references: [id])
+  ruangan       Ruangan   @relation(fields: [ruanganId], references: [id])
 
-  @@unique([ruanganId, tanggalMulai, jamMulai, jamSelesai], name: "unique_booking")
+  @@unique([ruanganId, tanggalBooking], name: "unique_slot_booking")
   @@map("reservasi")
 }

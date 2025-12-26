@@ -10,7 +10,7 @@ export default async function LoginPage() {
     if (session.user.role === "admin") {
       redirect("/admin/dashboard");
     }
-    redirect("/ui_user/dashboard");
+    redirect("/user/dashboard");
   }
   return <LoginForm />;
 }

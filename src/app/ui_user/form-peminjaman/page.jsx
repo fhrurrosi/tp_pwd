@@ -2,224 +2,231 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Swal from 'sweetalert2';
 import Navigation from '../../components/nav_user';
+import { supabase } from '@/lib/supabaseClient';
 
+// 1. IMPORT USE SESSION
+import { useSession } from "next-auth/react";
 
 export default function HalamanFormPeminjaman() {
-  // Man: Router untuk navigasi programatik
   const router = useRouter();
-  // Man: Mendapatkan parameter dari URL
-  const parameterPencarian = useSearchParams();
-  // Man: State untuk menyimpan data form
-  const [dataForm, setDataForm] = useState({
-    ruangan: '',
-    tanggal: '',
-    jamMulai: '',
-    jamSelesai: '',
+  const searchParams = useSearchParams();
+
+  // 2. AMBIL SESSION DATA
+  const { data: session, status } = useSession();
+
+  const ruanganIdParam = searchParams.get('ruanganId');
+  const tanggalParam = searchParams.get('tanggal');
+
+  const [roomDetails, setRoomDetails] = useState(null);
+  const [loadingRoom, setLoadingRoom] = useState(true);
+
+  const [formData, setFormData] = useState({
     keperluan: '',
     dokumen: null,
   });
 
-  // Man: State untuk minimum date dan opsi waktu
-  const [tanggalMinimum, setTanggalMinimum] = useState('');
-  const [opsiWaktu, setOpsiWaktu] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
 
-  /**
-   * useEffect untuk inisialisasi tanggal minimum dan opsi waktu
-   */
+  // 3. CEK LOGIN (LOGIC ONLY)
   useEffect(() => {
-    const hariIni = new Date();
-    const tanggalHariIni = hariIni.toISOString().split('T')[0];
-    setTanggalMinimum(tanggalHariIni);
-
-    // mengatur waktu dari 07:00 sampai 16:00
-    const waktu = [];
-    for (let jam = 7; jam <= 16; jam++) {
-      const stringWaktu = `${jam.toString().padStart(2, '0')}:00`;
-      waktu.push(stringWaktu);
+    if (status === "unauthenticated") {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Akses Ditolak',
+        text: 'Anda harus login untuk melakukan peminjaman.',
+        confirmButtonColor: '#2563EB'
+      }).then(() => {
+        router.push("/login");
+      });
     }
-    setOpsiWaktu(waktu);
-  }, []);
+  }, [status, router]);
 
-  /**
-   * useEffect untuk mengisi form dengan data dari ruangan dan tanggal yang dituju
-   */
   useEffect(() => {
-    const ruangan = parameterPencarian.get('ruangan');
-    const tanggal = parameterPencarian.get('tanggal');
-    
-    setDataForm(sebelumnya => ({
-      ...sebelumnya,
-      ruangan: ruangan || '',
-      tanggal: tanggal || '',
-    }));
-  }, [parameterPencarian]);
+    async function getRoomDetails() {
+      if (!ruanganIdParam) return;
 
-  
-  const tanganiPerubahan = (e) => {
-    const { name, value } = e.target;
-    
-    // Validasi tanggal - tidak boleh tanggal di masa lalu
-    if (name === 'tanggal' && value) {
-      const tanggalTerpilih = new Date(value);
-      const hariIni = new Date();
-      hariIni.setHours(0, 0, 0, 0);
-      tanggalTerpilih.setHours(0, 0, 0, 0);
-      
-      if (tanggalTerpilih < hariIni) {
-        alert('Anda tidak bisa memilih tanggal di masa lalu! Silakan pilih tanggal hari ini atau setelahnya.');
-        return;
+      try {
+        const res = await fetch(`/api/rooms/${ruanganIdParam}`);
+        const data = await res.json();
+        if (res.ok) {
+          setRoomDetails(data);
+        } else {
+          Swal.fire("Error", "Gagal mengambil data ruangan", "error");
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoadingRoom(false);
       }
     }
-    
-    setDataForm(sebelumnya => ({
-      ...sebelumnya,
-      [name]: value
-    }));
+
+    getRoomDetails();
+  }, [ruanganIdParam]);
+
+  const tanganiPerubahan = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  
-  // Handler untuk upload file dokumen
   const tanganiPerubahanFile = (e) => {
     const file = e.target.files[0];
-    setDataForm(sebelumnya => ({
-      ...sebelumnya,
-      dokumen: file
-    }));
+    setFormData(prev => ({ ...prev, dokumen: file }));
   };
 
-  // Handler untuk membatalkan form dan kembali ke halaman sebelumnya
-  const tanganiBatal = () => {
-    router.back();
-  };
-
-  // Handler untuk submit form peminjaman
   const tanganiSubmit = async (e) => {
     e.preventDefault();
-    // panggil API untuk submit dataForm
-    console.log('Form submitted:', dataForm);
-    alert('Peminjaman berhasil diajukan!');
-    router.push('/ui_user/dashboard');
+    setSubmitting(true);
+
+    // 4. AMBIL USER ID DARI SESSION (MENGGANTIKAN const userId = 1)
+    if (!session || !session.user) {
+        Swal.fire("Error", "Sesi user tidak valid. Silakan login ulang.", "error");
+        setSubmitting(false);
+        return;
+    }
+    const userId = session.user.id; 
+
+    try {
+      let dokumenUrl = null;
+      if (formData.dokumen) {
+        const file = formData.dokumen;
+        const fileExt = file.name.split('.').pop();
+        // Nama file pakai userId yang dinamis
+        const fileName = `${userId}-${Date.now()}.${fileExt}`;
+        const filePath = `uploads/${fileName}`;
+
+        const { data: uploadData, error: uploadError } = await supabase
+          .storage
+          .from('dokumen-peminjaman')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          throw new Error("Gagal upload dokumen: " + uploadError.message);
+        }
+
+        dokumenUrl = uploadData.path;
+      }
+
+      const payload = {
+        ruanganId: ruanganIdParam,
+        userId: userId, // Kirim ID asli
+        tanggal: tanggalParam,
+        keperluan: formData.keperluan,
+        dokumenPath: dokumenUrl
+      };
+
+      const res = await fetch('/api/reservasi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 409) {
+          throw new Error("Maaf, ruangan ini baru saja dibooking orang lain!");
+        }
+        throw new Error(result.message || "Gagal mengajukan peminjaman");
+      }
+
+      await Swal.fire({
+        title: "Berhasil!",
+        text: "Peminjaman berhasil diajukan.",
+        icon: "success",
+        confirmButtonColor: "#2563EB"
+      });
+
+      router.push('/ui_user/dashboard');
+
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        title: "Gagal",
+        text: error.message,
+        icon: "error",
+        confirmButtonColor: "#EF4444"
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
+  if (loadingRoom || status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Jika tidak ada session (dan proses redirect belum selesai), return null agar tidak flash konten
+  if (status === "unauthenticated") return null;
+
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gray-50">
       <Navigation />
-      
-      <main className="max-w-4xl mx-auto px-8 py-12" role="main" aria-label="Form Peminjaman Ruangan">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-          {/* Header */}
-          <div className="bg-linear-to-r from-blue-600 to-blue-700 px-8 py-6">
-            <h1 className="text-3xl font-bold text-white">Isi Formulir Berikut :</h1>
+
+      <main className="max-w-4xl mx-auto px-6 py-10">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+          <div className="bg-blue-600 px-8 py-6">
+            <h1 className="text-2xl font-bold text-white tracking-wide">Konfirmasi Peminjaman</h1>
+            <p className="text-blue-100 text-sm mt-1">Pastikan detail ruangan dan tanggal sudah sesuai.</p>
           </div>
 
-          {/* Form Content */}
           <div className="p-8">
-            <form onSubmit={tanganiSubmit} className="space-y-6">
-              {/* Ruangan */}
-              <div className="grid grid-cols-3 items-center border-b border-gray-200 pb-6">
-                <label className="text-xl font-bold text-gray-900">Ruangan</label>
-                <div className="col-span-2">
-                  <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-100 text-gray-900 text-lg">
-                    <span className="font-semibold">{dataForm.ruangan || '-'}</span>
+            <form onSubmit={tanganiSubmit} className="space-y-8">
+              <div className="bg-blue-50/50 p-6 rounded-xl border border-blue-100 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 md:items-center gap-2">
+                  <label className="text-sm font-bold text-gray-500 uppercase tracking-wider">Ruangan</label>
+                  <div className="md:col-span-2 text-xl font-bold text-gray-800">
+                    {roomDetails?.namaRuangan || '-'}
                   </div>
-                  <input
-                    type="hidden"
-                    name="ruangan"
-                    value={dataForm.ruangan}
-                  />
                 </div>
-              </div>
 
-              {/* Tanggal */}
-              <div className="grid grid-cols-3 items-center border-b border-gray-200 pb-6">
-                <label className="text-xl font-bold text-gray-900">Tanggal</label>
-                <div className="col-span-2">
-                  <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-100 text-gray-900 text-lg">
-                    <span className="font-semibold">
-                      {dataForm.tanggal 
-                        ? new Date(dataForm.tanggal + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-                        : '-'
-                      }
+                <div className="h-px bg-blue-200/50 w-full"></div>
+                <div className="grid grid-cols-1 md:grid-cols-3 md:items-center gap-2">
+                  <label className="text-sm font-bold text-gray-500 uppercase tracking-wider">Tanggal</label>
+                  <div className="md:col-span-2 text-lg font-semibold text-gray-800">
+                    {tanggalParam
+                      ? new Date(tanggalParam).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+                      : '-'}
+                  </div>
+                </div>
+
+                <div className="h-px bg-blue-200/50 w-full"></div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 md:items-center gap-2">
+                  <label className="text-sm font-bold text-gray-500 uppercase tracking-wider">Waktu Sesi</label>
+                  <div className="md:col-span-2">
+                    <span className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-100 text-blue-800 font-bold text-lg border border-blue-200">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                      {roomDetails?.jamMulai} - {roomDetails?.jamSelesai} WIB
                     </span>
                   </div>
-                  <input
-                    type="hidden"
-                    name="tanggal"
-                    value={dataForm.tanggal}
-                  />
                 </div>
               </div>
-
-              {/* Jam Mulai */}
-              <div className="grid grid-cols-3 items-center border-b border-gray-200 pb-6">
-                <label className="text-xl font-bold text-gray-900">Jam Mulai</label>
-                <div className="col-span-2">
-                  <select
-                    name="jamMulai"
-                    value={dataForm.jamMulai}
-                    onChange={tanganiPerubahan}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 text-lg transition-all duration-200 bg-white"
-                    required
-                  >
-                    <option value="">Pilih Jam Mulai</option>
-                    {opsiWaktu.map((waktu) => (
-                      <option key={waktu} value={waktu}>
-                        {waktu}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Jam Selesai */}
-              <div className="grid grid-cols-3 items-center border-b border-gray-200 pb-6">
-                <label className="text-xl font-bold text-gray-900">Jam Selesai</label>
-                <div className="col-span-2">
-                  <select
-                    name="jamSelesai"
-                    value={dataForm.jamSelesai}
-                    onChange={tanganiPerubahan}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 text-lg transition-all duration-200 bg-white"
-                    required
-                  >
-                    <option value="">Pilih Jam Selesai</option>
-                    {opsiWaktu.map((waktu) => (
-                      <option key={waktu} value={waktu} disabled={dataForm.jamMulai && waktu <= dataForm.jamMulai}>
-                        {waktu}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Keperluan */}
-              <div className="grid grid-cols-3 items-center border-b border-gray-200 pb-6">
-                <label className="text-xl font-bold text-gray-900">keperluan</label>
-                <div className="col-span-2">
-                  <input
-                    type="text"
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-gray-700 font-bold mb-2 text-lg">Keperluan Peminjaman</label>
+                  <textarea
                     name="keperluan"
-                    value={dataForm.keperluan}
+                    rows="3"
+                    value={formData.keperluan}
                     onChange={tanganiPerubahan}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 text-lg transition-all duration-200"
-                    placeholder="Masukkan keperluan"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900 text-lg placeholder-gray-400"
+                    placeholder="Contoh: Rapat Koordinasi Proyek"
                     required
                   />
                 </div>
-              </div>
-
-              {/* Unggah Dokumen */}
-              <div className="grid grid-cols-3 items-start border-b border-gray-200 pb-6">
-                <label className="text-xl font-bold text-gray-900 pt-3">
-                  Unggah Dokumen<br/>
-                  Pendukung(Opsional)
-                </label>
-                <div className="col-span-2">
-                  <div className="relative">
+                <div>
+                  <label className="block text-gray-700 font-bold mb-2 text-lg">
+                    Dokumen Pendukung <span className="text-gray-400 font-normal text-sm">(Opsional)</span>
+                  </label>
+                  <div className="relative group">
                     <input
                       type="file"
-                      name="dokumen"
                       onChange={tanganiPerubahanFile}
                       accept=".pdf,.doc,.docx"
                       className="hidden"
@@ -227,38 +234,45 @@ export default function HalamanFormPeminjaman() {
                     />
                     <label
                       htmlFor="file-upload"
-                      className="block w-full px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 transition-all duration-200 cursor-pointer bg-gray-50 hover:bg-blue-50"
+                      className="flex flex-col items-center justify-center w-full h-32 px-4 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-blue-50 hover:border-blue-400 transition-all"
                     >
-                      <div className="flex items-center gap-3">
-                        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                        <span className="text-gray-600">
-                          {dataForm.dokumen ? dataForm.dokumen.name : 'Pilih file atau drag & drop di sini'}
-                        </span>
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <svg className="w-8 h-8 mb-3 text-gray-400 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                        <p className="mb-2 text-sm text-gray-500 font-semibold group-hover:text-blue-600">
+                          {formData.dokumen ? formData.dokumen.name : "Klik untuk upload dokumen"}
+                        </p>
+                        <p className="text-xs text-gray-400">PDF, DOC, DOCX (Max 5MB)</p>
                       </div>
                     </label>
                   </div>
-                  <p className="mt-2 text-sm text-gray-500">Format: PDF, DOC, DOCX (Max 5MB)</p>
                 </div>
               </div>
 
-              {/* Buttons */}
-              <div className="flex gap-4 pt-6">
+              <div className="flex flex-col md:flex-row gap-4 pt-4">
                 <button
                   type="button"
-                  onClick={tanganiBatal}
-                  className="flex-1 px-8 py-4 bg-gray-200 text-gray-800 rounded-xl font-bold text-lg hover:bg-gray-300 transition-all duration-200 shadow-md hover:shadow-lg"
+                  onClick={() => router.back()}
+                  disabled={submitting}
+                  className="flex-1 px-6 py-4 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-bold text-lg hover:bg-gray-50 hover:border-gray-300 transition-all"
                 >
-                  Batalkan Peminjaman
+                  Batal
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-8 py-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                  disabled={submitting}
+                  className="flex-1 px-6 py-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-700 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
                 >
-                  Ajukan Peminjaman
+                  {submitting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      Mengupload...
+                    </>
+                  ) : (
+                    'Ajukan Sekarang'
+                  )}
                 </button>
               </div>
+
             </form>
           </div>
         </div>

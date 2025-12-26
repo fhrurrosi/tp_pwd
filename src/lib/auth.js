@@ -11,7 +11,9 @@ export const authOptions = {
     strategy: "jwt",
     maxAge: 10 * 60,
   },
-
+  pages: {
+    signIn: "/login",
+  },
   providers: [
     CredentialsProvider({
       async authorize(credentials) {

@@ -1,0 +1,31 @@
+// src/app/api/riwayat/route.js
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+export const dynamic = 'force-dynamic';
+
+export async function GET(req) {
+  try {
+    const userId = 1; 
+
+    const riwayat = await prisma.reservasi.findMany({
+      where: {
+        userId: userId 
+      },
+      include: {
+        ruangan: {
+          select: { namaRuangan: true, jamMulai: true, jamSelesai: true }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc' 
+      }
+    });
+
+    return NextResponse.json({ success: true, data: riwayat });
+
+  } catch (error) {
+    console.error("Error Riwayat:", error);
+    return NextResponse.json({ success: false, message: "Server error" }, { status: 500 });
+  }
+}

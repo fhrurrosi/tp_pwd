@@ -5,16 +5,17 @@ import Swal from "sweetalert2"
 import { useRouter, useParams } from "next/navigation"
 
 export default function EditRuanganPage() {
-  // 1. Ambil ID dari URL menggunakan useParams (Wajib untuk Client Component)
   const params = useParams()
   const router = useRouter()
-  const id = params?.id // ID ruangan (misal: "1")
+  const id = params?.id
 
-  // State Form
+  // State Form (Langsung ada jamMulai dan jamSelesai)
   const [form, setForm] = useState({
     name: "",
     location: "",
     capacity: "",
+    jamMulai: "",   // Ditambah
+    jamSelesai: "", // Ditambah
     facilities: {
       ac: false,
       projector: false,
@@ -22,39 +23,43 @@ export default function EditRuanganPage() {
     },
   })
 
-  // State Loading & Saving
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  // 2. Fetch Data Ruangan saat halaman dibuka
+  // 1. Fetch Data Ruangan
   useEffect(() => {
     async function fetchRoomData() {
-      if (!id) return // Tunggu sampai ID tersedia
+      if (!id) return
       
       try {
         const res = await fetch(`/api/rooms/${id}`)
         
         if (!res.ok) {
-            if (res.status === 404) throw new Error("Ruangan tidak ditemukan")
-            throw new Error("Gagal mengambil data")
+           if (res.status === 404) throw new Error("Ruangan tidak ditemukan")
+           throw new Error("Gagal mengambil data")
         }
         
         const data = await res.json()
 
+        // Set Form dengan data dari database
         setForm({
           name: data.namaRuangan || "",
           location: data.lokasi || "",
           capacity: data.kapasitas || "",
+          // Ambil jam langsung dari root object data
+          jamMulai: data.jamMulai || "07:00", 
+          jamSelesai: data.jamSelesai || "09:00",
           facilities: {
             ac: data.ac || false,
             projector: data.proyektor || false,
             whiteboard: data.papanTulis || false,
           },
         })
+
       } catch (error) {
         console.error(error)
         Swal.fire("Error", error.message, "error")
-        router.push("/ui_admin/manajemen-ruangan") // Kembalikan ke list jika error
+        router.push("/ui_admin/manajemen-ruangan")
       } finally {
         setLoading(false)
       }
@@ -63,7 +68,7 @@ export default function EditRuanganPage() {
     fetchRoomData()
   }, [id, router])
 
-  // 3. Handle Perubahan Input
+  // 2. Handle Perubahan Input
   function handleChange(e) {
     const { name, value, type, checked } = e.target
     
@@ -72,22 +77,34 @@ export default function EditRuanganPage() {
       setForm((prev) => ({ ...prev, facilities: { ...prev.facilities, [name]: checked } }))
       return
     }
- 
+    
+    // Handle Input Biasa
     setForm((prev) => ({ ...prev, [name]: type === "number" ? Number(value) : value }))
   }
 
   function onCancel() {
     router.push("/ui_admin/manajemen-ruangan")
   }
+
+  // 3. Simpan Perubahan (PATCH)
   async function onSave(e) {
     e.preventDefault()
     setSaving(true)
 
     try {
+      const payload = {
+        name: form.name,
+        location: form.location,
+        capacity: Number(form.capacity),
+        jamMulai: form.jamMulai,     // Kirim Jam
+        jamSelesai: form.jamSelesai, // Kirim Jam
+        facilities: form.facilities,
+      }
+
       const res = await fetch(`/api/rooms/${id}`, {
         method: "PATCH", 
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       })
 
       if (!res.ok) throw new Error("Gagal update data")
@@ -125,76 +142,94 @@ export default function EditRuanganPage() {
       <div className="max-w-3xl mx-auto bg-white rounded-lg p-6 shadow">
         <h1 className="text-2xl font-semibold text-black mb-6">Edit Ruangan</h1>
 
-        <form onSubmit={onSave} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-black mb-1">Nama Ruangan</label>
-            <input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              required
-              placeholder="Contoh: Ruang Lab A"
-              className="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-slate-700"
-            />
+        <form onSubmit={onSave} className="space-y-6">
+          
+          {/* INFORMASI DASAR */}
+          <div className="space-y-4 border-b border-slate-100 pb-6">
+            <h3 className="text-lg font-medium text-slate-800">Informasi Ruangan</h3>
+            <div>
+              <label className="block text-sm font-medium text-black mb-1">Nama Ruangan</label>
+              <input 
+                name="name" 
+                value={form.name} 
+                onChange={handleChange} 
+                required 
+                className="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-slate-700" 
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-black mb-1">Lokasi</label>
+                <input 
+                  name="location" 
+                  value={form.location} 
+                  onChange={handleChange} 
+                  required 
+                  className="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-slate-700" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-black mb-1">Kapasitas</label>
+                <input 
+                  name="capacity" 
+                  value={form.capacity} 
+                  onChange={handleChange} 
+                  type="number" 
+                  required 
+                  className="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-slate-700" 
+                />
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-black mb-1">Lokasi</label>
-            <input
-              name="location"
-              value={form.location}
-              onChange={handleChange}
-              required
-              placeholder="Contoh: Gedung B Lt 2"
-              className="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-slate-700"
-            />
+          {/* JAM OPERASIONAL (SIMPLE INPUT) */}
+          <div className="space-y-4 border-b border-slate-100 pb-6">
+            <h3 className="text-lg font-medium text-slate-800">Waktu Operasional</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-black mb-1">Jam Mulai</label>
+                <input 
+                  type="time" 
+                  name="jamMulai" 
+                  value={form.jamMulai} 
+                  onChange={handleChange} 
+                  required 
+                  className="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-slate-700" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-black mb-1">Jam Selesai</label>
+                <input 
+                  type="time" 
+                  name="jamSelesai" 
+                  value={form.jamSelesai} 
+                  onChange={handleChange} 
+                  required 
+                  className="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-slate-700" 
+                />
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-black mb-1">Kapasitas</label>
-            <input
-              name="capacity"
-              value={form.capacity}
-              onChange={handleChange}
-              type="number"
-              required
-              placeholder="0"
-              className="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-slate-700"
-            />
-          </div>
-
+          {/* FASILITAS */}
           <fieldset className="border border-slate-200 rounded-md p-4 bg-slate-50">
             <legend className="text-sm font-medium text-black px-2">Fasilitas Pendukung</legend>
-            <div className="flex flex-col gap-2 mt-1">
+            <div className="flex flex-wrap gap-4 mt-1">
               <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-                <input type="checkbox" name="ac" checked={form.facilities.ac} onChange={handleChange} className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
-                AC
+                <input type="checkbox" name="ac" checked={form.facilities.ac} onChange={handleChange} className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" /> AC
               </label>
               <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-                <input type="checkbox" name="projector" checked={form.facilities.projector} onChange={handleChange} className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
-                Projector
+                <input type="checkbox" name="projector" checked={form.facilities.projector} onChange={handleChange} className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" /> Projector
               </label>
               <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-                <input type="checkbox" name="whiteboard" checked={form.facilities.whiteboard} onChange={handleChange} className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
-                Whiteboard
+                <input type="checkbox" name="whiteboard" checked={form.facilities.whiteboard} onChange={handleChange} className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" /> Whiteboard
               </label>
             </div>
           </fieldset>
 
           <div className="flex items-center justify-end gap-3 mt-8 pt-4 border-t border-slate-100">
-            <button 
-              type="button" 
-              onClick={onCancel} 
-              disabled={saving}
-              className="px-6 py-2 rounded-md bg-white border border-slate-300 text-slate-700 text-sm hover:bg-slate-50 transition"
-            >
-              Batal
-            </button>
-            <button 
-              type="submit" 
-              disabled={saving}
-              className="px-6 py-2 rounded-md bg-indigo-600 text-white text-sm hover:bg-indigo-700 transition disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
-            >
+            <button type="button" onClick={onCancel} disabled={saving} className="px-6 py-2 rounded-md bg-white border border-slate-300 text-slate-700 text-sm hover:bg-slate-50 transition">Batal</button>
+            <button type="submit" disabled={saving} className="px-6 py-2 rounded-md bg-indigo-600 text-white text-sm hover:bg-indigo-700 transition disabled:opacity-70 disabled:cursor-not-allowed">
               {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
             </button>
           </div>
@@ -202,4 +237,4 @@ export default function EditRuanganPage() {
       </div>
     </main>
   )
-} 
+}

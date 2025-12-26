@@ -6,43 +6,44 @@ import TabelRuanganTersedia from './ruangan_tersedia';
 import TabelRuanganSkeleton from '../../components/TableRuanganSkeleton';
 
 export default function DashboardUser() {
-  // State untuk data ruangan
   const [daftarRuangan, setDaftarRuangan] = useState([]);
-  
-  // State pagination & loading
   const [halamanSaatIni, setHalamanSaatIni] = useState(1);
   const [loading, setLoading] = useState(true);
 
   const ruanganPerHalaman = 6;
   const hariIni = new Date();
-
-  // --- BAGIAN FETCHING DATA ---
   useEffect(() => {
     async function fetchRuangan() {
       setLoading(true);
       try {
-        const res = await fetch('/api/rooms/available');
+        const offset = hariIni.getTimezoneOffset();
+        const localDate = new Date(hariIni.getTime() - (offset * 60 * 1000));
+        const dateStr = localDate.toISOString().split('T')[0]; 
+
+        console.log("Fetching data untuk tanggal:", dateStr);
+        const res = await fetch(`/api/rooms/available?date=${dateStr}`, {
+           cache: 'no-store'
+        });
+        
         const result = await res.json();
         
         if (result.success) {
           setDaftarRuangan(result.data);
         } else {
-          console.error("Gagal mengambil data:", result.message);
           setDaftarRuangan([]);
         }
       } catch (error) {
         console.error("Error fetching:", error);
       } finally {
-        // Matikan loading setelah fetch selesai
         setLoading(false);
       }
     }
 
     fetchRuangan();
   }, []); 
-  // Dependency array kosong [] artinya fetch hanya jalan sekali saat halaman dibuka
 
-  // --- LOGIKA PAGINATION ---
+  // ... (Sisa kode pagination dan return UI sama persis, tidak perlu diubah)
+  // ...
   const totalHalaman = Math.ceil(daftarRuangan.length / ruanganPerHalaman);
   const indeksAwal = (halamanSaatIni - 1) * ruanganPerHalaman;
   const indeksAkhir = indeksAwal + ruanganPerHalaman;
@@ -51,7 +52,6 @@ export default function DashboardUser() {
   const tanganiPerubahanHalaman = (halaman) => {
     if (halaman >= 1 && halaman <= totalHalaman) {
       setHalamanSaatIni(halaman);
-      // Opsional: Scroll ke atas tabel saat ganti halaman
     }
   };
 
@@ -81,7 +81,6 @@ export default function DashboardUser() {
           <TabelRuanganSkeleton rows={ruanganPerHalaman} />
         ) : (
           <TabelRuanganTersedia
-            // Gunakan data dari state, bukan variabel hardcode
             ruangan={ruanganTerpaginasi} 
             halamanSaatIni={halamanSaatIni}
             totalHalaman={totalHalaman}
