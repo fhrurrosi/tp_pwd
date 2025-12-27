@@ -7,7 +7,11 @@ export default withAuth(
     const path = req.nextUrl.pathname;
     const role = token?.role;
 
-    if (path.startsWith("/login") || path.startsWith("/register") || path === "lupa_password") {
+    if (
+      path.startsWith("/login") || 
+      path.startsWith("/register") || 
+      path.startsWith("/lupa_password") 
+    ) {
       if (token) {
         if (role === "ADMIN") {
           return NextResponse.redirect(new URL("/ui_admin/dashboard", req.url));
@@ -15,17 +19,14 @@ export default withAuth(
           return NextResponse.redirect(new URL("/ui_user/dashboard", req.url));
         }
       }
-     
       return NextResponse.next();
     }
 
-    
     if (path.startsWith("/ui_admin")) {
       if (role !== "ADMIN") {
         return NextResponse.redirect(new URL("/ui_user/dashboard", req.url));
       }
     }
-
     if (path.startsWith("/ui_user")) {
       if (role !== "USER") {
         return NextResponse.redirect(new URL("/ui_admin/dashboard", req.url));
@@ -34,11 +35,13 @@ export default withAuth(
   },
   {
     callbacks: {
-      
       authorized: ({ token, req }) => {
         const path = req.nextUrl.pathname;
-
-        if (path.startsWith("/login") || path.startsWith("/register")) {
+        if (
+          path.startsWith("/login") || 
+          path.startsWith("/register") || 
+          path.startsWith("/lupa_password")
+        ) {
           return true;
         }
 
@@ -48,12 +51,12 @@ export default withAuth(
   }
 );
 
-
 export const config = {
   matcher: [
     "/ui_admin/:path*", 
     "/ui_user/:path*",  
-    "/login",           
-    "/register",        
+    "/login/:path*",           
+    "/register/:path*",
+    "/lupa_password/:path*",
   ],
 };

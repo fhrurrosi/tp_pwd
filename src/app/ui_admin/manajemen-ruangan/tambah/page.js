@@ -7,29 +7,25 @@ import Swal from "sweetalert2"
 export default function Page() {
   const router = useRouter()
   
-  // State Form (Langsung ada jamMulai dan jamSelesai)
   const [form, setForm] = useState({ 
     name: "", 
     location: "", 
     capacity: "", 
-    jamMulai: "07:00",   // Default jam pagi
-    jamSelesai: "09:00", // Default durasi 2 jam
+    jamMulai: "07:00",   
+    jamSelesai: "09:00", 
     facilities: { ac: false, projector: false, whiteboard: false } 
   })
 
   const [saving, setSaving] = useState(false)
 
-  // Handler Input
   function handleChange(e) {
     const { name, value, type, checked } = e.target
     
-    // Handle Checkbox Fasilitas
     if (name in form.facilities) {
       setForm((p) => ({ ...p, facilities: { ...p.facilities, [name]: checked } }))
       return
     }
     
-    // Handle Input Biasa
     setForm((p) => ({ ...p, [name]: type === 'number' ? Number(value) : value }))
   }
 
@@ -41,13 +37,12 @@ export default function Page() {
     e.preventDefault()
     setSaving(true)
     try {
-      // Payload Simple (Tidak ada array sessions lagi)
       const payload = {
         name: form.name,
         location: form.location,
         capacity: Number(form.capacity) || 0,
-        jamMulai: form.jamMulai,     // Kirim Jam
-        jamSelesai: form.jamSelesai, // Kirim Jam
+        jamMulai: form.jamMulai,     
+        jamSelesai: form.jamSelesai, 
         status: true,
         facilities: form.facilities,
       }
@@ -77,7 +72,6 @@ export default function Page() {
 
         <form onSubmit={onSave} className="space-y-6">
           
-          {/* INFORMASI DASAR */}
           <div className="space-y-4 border-b border-slate-100 pb-6">
             <h3 className="text-lg font-medium text-slate-800">Informasi Ruangan</h3>
             
@@ -106,7 +100,6 @@ export default function Page() {
             </div>
           </div>
 
-          {/* JAM OPERASIONAL (Simple Inputs) */}
           <div className="space-y-4 border-b border-slate-100 pb-6">
             <h3 className="text-lg font-medium text-slate-800">Waktu Operasional</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -135,7 +128,6 @@ export default function Page() {
             </div>
           </div>
 
-          {/* FASILITAS */}
           <fieldset>
             <legend className="text-sm font-medium text-black mb-2">Fasilitas Pendukung</legend>
             <div className="flex text-black flex-wrap gap-4">

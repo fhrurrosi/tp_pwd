@@ -8,11 +8,13 @@ import {
   validatePhone,
   normalizePhone,
   validateNIM,
-} from "../../../lib/validation";
+} from "../../../lib/validation"; 
 import Swal from "sweetalert2";
 
 export default function RegisterPage() {
   const router = useRouter();
+  
+  const [isLoading, setIsLoading] = useState(false);
 
   const [form, setForm] = useState({
     id: "",
@@ -39,7 +41,6 @@ export default function RegisterPage() {
     const { name, value } = e.target;
 
     if (name === "phone") {
-      // Hanya angka
       const numbersOnly = value.replace(/\D/g, "");
       setForm((prev) => ({ ...prev, [name]: numbersOnly }));
 
@@ -84,7 +85,6 @@ export default function RegisterPage() {
     }
   }
 
-
   const passwordsMatch = form.password === form.confirmPassword;
   const pwdLabel =
     validation.pwdScore <= 1
@@ -110,10 +110,11 @@ export default function RegisterPage() {
     validation.pwdScore >= 2 &&
     passwordsMatch;
 
-  // Handle registration
   async function handleRegister(e) {
     e.preventDefault();
     if (!isFormValid) return;
+
+    setIsLoading(true);
 
     const payload = {
       nimNip: form.id.trim(),
@@ -139,17 +140,22 @@ export default function RegisterPage() {
           icon: "error",
           confirmButtonText: "OK",
         });
+        setIsLoading(false); 
         return;
       }
 
+      setIsLoading(false); 
+
       Swal.fire({
-        title: "Registrasi Berhasil",
-        text: "Akun Anda telah berhasil dibuat. Silakan masuk menggunakan akun Anda.",
+        title: "Langkah Terakhir!",
+        text: "Kode OTP telah dikirim ke email Anda. Silakan verifikasi untuk mengaktifkan akun.",
         icon: "success",
-        confirmButtonText: "OK",
+        confirmButtonText: "Masukkan OTP",
+        timer: 3000,
       }).then(() => {
-        router.push("/login");
+        router.push(`/register/otp?email=${data.email}`);
       });
+
     } catch (err) {
       console.error(err);
       Swal.fire({
@@ -158,6 +164,7 @@ export default function RegisterPage() {
         icon: "error",
         confirmButtonText: "OK",
       });
+      setIsLoading(false);
     }
   }
 
@@ -180,6 +187,7 @@ export default function RegisterPage() {
               inputMode="numeric"
               value={form.id}
               onChange={handleChange}
+              disabled={isLoading} 
               placeholder="Masukkan NIM (contoh: 2300018164)"
               error={
                 validation.idTouched && !validation.idValid
@@ -194,16 +202,17 @@ export default function RegisterPage() {
               id="name"
               value={form.name}
               onChange={handleChange}
+              disabled={isLoading}
               placeholder="Nama lengkap"
               required
             />
 
-            {/* Phone Input */}
             <FormInput
               label="Nomor Telepon"
               id="phone"
               value={form.phone}
               onChange={handleChange}
+              disabled={isLoading}
               placeholder="08xxxxxxxxxx"
               error={
                 validation.phoneTouched && !validation.phoneValid
@@ -219,6 +228,7 @@ export default function RegisterPage() {
               type="email"
               value={form.email}
               onChange={handleChange}
+              disabled={isLoading}
               placeholder="email@gmail.com"
               error={
                 !validation.emailValid && form.email.length > 0
@@ -227,6 +237,7 @@ export default function RegisterPage() {
               }
               required
             />
+
             <div>
               <label
                 className="block text-sm font-medium text-black mb-1"
@@ -241,6 +252,7 @@ export default function RegisterPage() {
                   type={showPwd ? "text" : "password"}
                   value={form.password}
                   onChange={handleChange}
+                  disabled={isLoading}
                   placeholder="Minimal 8 karakter"
                   className="w-full rounded-md border border-slate-200 px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-sm placeholder-[#64748B] text-[#64748B] transition duration-150 ease-in-out focus:shadow-md hover:shadow-sm"
                   required
@@ -283,6 +295,7 @@ export default function RegisterPage() {
               type={showPwd ? "text" : "password"}
               value={form.confirmPassword}
               onChange={handleChange}
+              disabled={isLoading}
               placeholder="Ulangi password"
               error={
                 form.confirmPassword.length > 0 && !passwordsMatch
@@ -292,17 +305,27 @@ export default function RegisterPage() {
               required
             />
 
-            {/* Submit Buttons */}
             <div className="pt-2 space-y-3">
               <button
                 type="submit"
-                disabled={!isFormValid}
-                className={`w-full text-white font-semibold py-2 rounded-md shadow-sm transform transition duration-150 ease-in-out ${isFormValid
+                disabled={!isFormValid || isLoading}
+                className={`w-full flex justify-center items-center text-white font-semibold py-2 rounded-md shadow-sm transform transition duration-150 ease-in-out ${
+                  isFormValid && !isLoading
                     ? "bg-indigo-600 hover:bg-indigo-700 hover:-translate-y-1 hover:shadow-lg active:scale-95"
                     : "bg-slate-300 cursor-not-allowed"
-                  }`}
+                }`}
               >
-                Register
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Memproses...
+                  </>
+                ) : (
+                  "Register"
+                )}
               </button>
 
               <div className="flex items-center gap-3">
@@ -314,6 +337,7 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => router.push("/login")}
+                disabled={isLoading}
                 className="w-full bg-white border border-indigo-600 text-indigo-600 font-medium py-2 rounded-md shadow-sm transform transition duration-150 ease-in-out hover:bg-indigo-50 hover:-translate-y-1 active:scale-95"
               >
                 Masuk
@@ -383,7 +407,7 @@ function FormInput({ label, id, error, ...props }) {
       <input
         id={id}
         name={id}
-        className="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-sm placeholder-[#64748B] text-[#64748B] transition duration-150 ease-in-out focus:shadow-md hover:shadow-sm"
+        className="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-sm placeholder-[#64748B] text-[#64748B] transition duration-150 ease-in-out focus:shadow-md hover:shadow-sm disabled:bg-slate-100 disabled:text-slate-400"
         {...props}
       />
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}

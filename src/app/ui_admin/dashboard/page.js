@@ -79,7 +79,7 @@ export default function Page() {
   };
   return (
     <>
-    <Navigation />
+      <Navigation />
       <main className="min-h-screen p-6 bg-[#F8FAFC] font-sans">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-2xl font-semibold text-black">Dashboard</h1>

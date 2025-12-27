@@ -7,25 +7,19 @@ import Link from 'next/link';
 export default function ReservasiRuangan() {
   const hariIni = new Date();
 
-  // --- STATE TANGGAL (KALENDER) ---
   const [tanggalTerpilih, setTanggalTerpilih] = useState(null);
   const [bulanSaatIni, setBulanSaatIni] = useState(
     () => new Date(hariIni.getFullYear(), hariIni.getMonth(), 1)
   );
   
-  // --- STATE DATA ---
   const [daftarRuangan, setDaftarRuangan] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // --- STATE FILTER (SEARCH) ---
-  // Kita ganti filter ribet dengan search simple
   const [searchTerm, setSearchTerm] = useState('');
 
-  // --- STATE PAGINATION ---
   const [halamanSaatIni, setHalamanSaatIni] = useState(1);
   const ruanganPerHalaman = 5;
 
-  // --- 1. FETCH DATA ---
   useEffect(() => {
     const fetchRuangan = async () => {
       if (!tanggalTerpilih) return;
@@ -37,7 +31,6 @@ export default function ReservasiRuangan() {
         const day = String(tanggalTerpilih).padStart(2, '0');
         const dateStr = `${year}-${month}-${day}`;
 
-        // Fetch dengan no-cache agar realtime
         const res = await fetch(`/api/rooms/available?date=${dateStr}`, {
             cache: 'no-store',
             next: { revalidate: 0 }
@@ -59,8 +52,6 @@ export default function ReservasiRuangan() {
     fetchRuangan();
   }, [tanggalTerpilih, bulanSaatIni]);
 
-
-  // --- 2. LOGIC FILTER SEARCH ---
   const getFilteredRooms = () => {
     if (!searchTerm) return daftarRuangan;
     return daftarRuangan.filter(r => 
@@ -71,7 +62,6 @@ export default function ReservasiRuangan() {
 
   const ruanganTerfilter = getFilteredRooms();
 
-  // --- 3. LOGIC PAGINATION ---
   const totalHalaman = Math.ceil(ruanganTerfilter.length / ruanganPerHalaman) || 1;
   const indeksAwal = (halamanSaatIni - 1) * ruanganPerHalaman;
   const ruanganTerpaginasi = ruanganTerfilter.slice(indeksAwal, indeksAwal + ruanganPerHalaman);
@@ -81,7 +71,6 @@ export default function ReservasiRuangan() {
   };
 
 
-  // --- LOGIC KALENDER ---
   const namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
   const namaHari = ['M', 'S', 'S', 'R', 'K', 'J', 'S'];
 
@@ -99,7 +88,6 @@ export default function ReservasiRuangan() {
   const prevMonth = () => {
     const newDate = new Date(bulanSaatIni.getFullYear(), bulanSaatIni.getMonth() - 1, 1);
     const today = new Date();
-    // Prevent back to past months
     if (newDate.getFullYear() > today.getFullYear() || 
        (newDate.getFullYear() === today.getFullYear() && newDate.getMonth() >= today.getMonth())) {
       setBulanSaatIni(newDate);

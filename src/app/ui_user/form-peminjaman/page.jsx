@@ -106,7 +106,7 @@ export default function HalamanFormPeminjaman() {
 
       const payload = {
         ruanganId: ruanganIdParam,
-        userId: userId, // Kirim ID asli
+        userId: userId, 
         tanggal: tanggalParam,
         keperluan: formData.keperluan,
         dokumenPath: dokumenUrl
