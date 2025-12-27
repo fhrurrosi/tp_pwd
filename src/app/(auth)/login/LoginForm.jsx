@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { signIn, getSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -135,6 +136,10 @@ export default function LoginPage() {
                   {errors.password.message}
                 </p>
               )}
+
+              <div className="mt-2 text-left">
+                <Link href="/lupa_password" className="text-sm text-indigo-600 hover:text-indigo-700">lupa password?</Link>
+              </div>
             </div>
 
             
