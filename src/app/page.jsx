@@ -8,7 +8,7 @@ export default async function Page() {
     redirect("/login");
   }
   if (session) {
-    if (session.user.role === "admin") {
+    if (session.user.role === "ADMIN") {
       redirect("/admin/dashboard");
     }
     redirect("/ui_user/dashboard");

@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from "next-auth/react";
 export default function Navigation() {
-  //  Mendapatkan pathname saat ini untuk menentukan link yang aktif
   const jalurSaatIni = usePathname();
   const { data: session } = useSession();
 
