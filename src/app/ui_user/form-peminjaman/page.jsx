@@ -6,14 +6,13 @@ import Swal from 'sweetalert2';
 import Navigation from '../../components/nav_user';
 import { supabase } from '@/lib/supabaseClient';
 
-// 1. IMPORT USE SESSION
+
 import { useSession } from "next-auth/react";
 
 export default function HalamanFormPeminjaman() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // 2. AMBIL SESSION DATA
   const { data: session, status } = useSession();
 
   const ruanganIdParam = searchParams.get('ruanganId');
@@ -29,7 +28,6 @@ export default function HalamanFormPeminjaman() {
 
   const [submitting, setSubmitting] = useState(false);
 
-  // 3. CEK LOGIN (LOGIC ONLY)
   useEffect(() => {
     if (status === "unauthenticated") {
       Swal.fire({
@@ -79,7 +77,6 @@ export default function HalamanFormPeminjaman() {
     e.preventDefault();
     setSubmitting(true);
 
-    // 4. AMBIL USER ID DARI SESSION (MENGGANTIKAN const userId = 1)
     if (!session || !session.user) {
         Swal.fire("Error", "Sesi user tidak valid. Silakan login ulang.", "error");
         setSubmitting(false);
@@ -92,7 +89,6 @@ export default function HalamanFormPeminjaman() {
       if (formData.dokumen) {
         const file = formData.dokumen;
         const fileExt = file.name.split('.').pop();
-        // Nama file pakai userId yang dinamis
         const fileName = `${userId}-${Date.now()}.${fileExt}`;
         const filePath = `uploads/${fileName}`;
 
@@ -161,7 +157,6 @@ export default function HalamanFormPeminjaman() {
     );
   }
 
-  // Jika tidak ada session (dan proses redirect belum selesai), return null agar tidak flash konten
   if (status === "unauthenticated") return null;
 
   return (

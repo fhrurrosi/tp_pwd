@@ -6,11 +6,15 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req) {
   try {
-    const userId = 1; 
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
+    const userId = parseInt(session.user.id);
 
     const riwayat = await prisma.reservasi.findMany({
       where: {
-        userId: userId 
+        userId: userId
       },
       include: {
         ruangan: {
