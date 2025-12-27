@@ -7,7 +7,7 @@ export default withAuth(
     const path = req.nextUrl.pathname;
     const role = token?.role;
 
-    if (path.startsWith("/login") || path.startsWith("/register")) {
+    if (path.startsWith("/login") || path.startsWith("/register") || path === "lupa_password") {
       if (token) {
         if (role === "ADMIN") {
           return NextResponse.redirect(new URL("/ui_admin/dashboard", req.url));

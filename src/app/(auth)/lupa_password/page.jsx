@@ -35,9 +35,9 @@ export default function LupaPasswordPage() {
               Konfirmasi
             </Link>
 
-            <a href="/login" className="block text-center text-sm text-indigo-600 hover:text-indigo-700">
+            <Link href="/login" className="block text-center text-sm text-indigo-600 hover:text-indigo-700">
               Kembali ke login
-            </a>
+            </Link>
           </form>
         </section>
       </div>
