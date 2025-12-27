@@ -53,11 +53,11 @@ export default function Page() {
 
   const getStatusBadge = (status) => {
     let style = "bg-gray-100 text-gray-700";
-    let label = status; // Default pakai teks asli dari DB jika tidak cocok
+    let label = status;
 
     if (status === "Approved") {
       style = "bg-emerald-100 text-emerald-700";
-      label = "Diterima";
+      label = "Disetujui";
     }
     if (status === "Pending") {
       style = "bg-amber-100 text-amber-700";
