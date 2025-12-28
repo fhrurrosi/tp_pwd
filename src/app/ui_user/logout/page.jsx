@@ -17,7 +17,7 @@ export default function Page() {
   const logout = async () => {
     setLoading(true);
     await signOut({ redirect: false });
-    router.replace('/login');
+    window.location.href = '/login';
   };
 
   return (
