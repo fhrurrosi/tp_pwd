@@ -5,7 +5,12 @@ import React, { useMemo, useState, useEffect } from "react";
 export default function Page() {
   const [stats, setStats] = useState({ totalRooms: 0, pendingReservations: 0 });
   const [allReservations, setAllReservations] = useState([]);
+
+  // Loading awal (saat ambil data pertama kali)
   const [loading, setLoading] = useState(true);
+
+  // Loading tambahan (saat pindah halaman)
+  const [isSwitchingPage, setIsSwitchingPage] = useState(false);
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -39,16 +44,19 @@ export default function Page() {
     return allReservations.slice(start, start + pageSize);
   }, [allReservations, page]);
 
-  function goNext() {
-    setPage((p) => Math.min(totalPages, p + 1));
-  }
-  function goPrev() {
-    setPage((p) => Math.max(1, p - 1));
-  }
-  function goTo(n) {
-    setPage(() => Math.min(Math.max(1, n), totalPages));
-  }
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > totalPages || newPage === page) return;
 
+    setIsSwitchingPage(true);
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+    setTimeout(() => {
+      setPage(newPage);
+      setIsSwitchingPage(false);
+    }, 500);
+  };
   const formatTanggal = (isoDate) => {
     if (!isoDate) return "-";
     return new Date(isoDate).toLocaleDateString("id-ID", {
@@ -58,7 +66,6 @@ export default function Page() {
     });
   };
 
-  // Komponen Badge Status Reusable
   const StatusBadge = ({ status }) => {
     let style = "bg-gray-100 text-gray-700";
     let label = status;
@@ -84,11 +91,11 @@ export default function Page() {
       </span>
     );
   };
+  const isLoading = loading || isSwitchingPage;
 
   return (
     <>
       <Navigation />
-      {/* P-3 di mobile, P-6 di desktop */}
       <main className="min-h-screen p-3 md:p-6 bg-[#F8FAFC] font-sans">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-xl md:text-2xl font-semibold text-black">
@@ -98,7 +105,6 @@ export default function Page() {
             Welcome back, Admin
           </p>
 
-          {/* Grid Layout: 2 Kolom di Mobile, Flex Row di Desktop */}
           <section className="grid grid-cols-2 md:flex md:flex-row gap-3 md:gap-6 mt-4 md:mt-6 mb-6 md:mb-8">
             <div className="w-full bg-white shadow rounded-lg p-4 md:p-5 border border-slate-100">
               <div className="text-xs md:text-sm text-slate-700">
@@ -132,10 +138,7 @@ export default function Page() {
               Recent Reservations
             </h2>
 
-            {/* --- WRAPPER UTAMA --- */}
             <div className="rounded-lg border border-slate-100 shadow-sm bg-white overflow-hidden">
-              {/* --- TAMPILAN DESKTOP (TABEL) --- */}
-              {/* Hidden di mobile, Block di md keatas */}
               <div className="hidden md:block w-full overflow-x-auto">
                 <table className="w-full min-w-[640px] table-auto">
                   <thead className="bg-slate-50 border-b border-slate-100">
@@ -158,7 +161,7 @@ export default function Page() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {loading ? (
+                    {isLoading ? (
                       Array.from({ length: 5 }).map((_, i) => (
                         <tr key={`skeleton-${i}`}>
                           <td className="px-6 py-4">
@@ -217,10 +220,8 @@ export default function Page() {
                 </table>
               </div>
 
-              {/* --- TAMPILAN MOBILE (KARTU) --- */}
-              {/* Block di mobile, Hidden di md keatas */}
               <div className="block md:hidden">
-                {loading ? (
+                {isLoading ? (
                   <div className="p-4 space-y-4">
                     {Array.from({ length: 3 }).map((_, i) => (
                       <div
@@ -251,7 +252,6 @@ export default function Page() {
                           </div>
                           <StatusBadge status={r.status} />
                         </div>
-
                         <div className="grid grid-cols-2 gap-2 mt-3 text-xs bg-slate-50 p-2 rounded border border-slate-100">
                           <div>
                             <span className="block text-slate-400 text-[10px] uppercase">
@@ -279,24 +279,24 @@ export default function Page() {
               </div>
             </div>
 
-            {/* Pagination Controls */}
             {!loading && currentReservations.length > 0 && (
-              <div className="flex flex-col sm:flex-row items-center gap-3 mt-4 justify-end">
+              <div className="flex items-center justify-center gap-2 mt-4">
                 <button
-                  onClick={goPrev}
-                  disabled={page === 1}
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1 || isSwitchingPage}
                   className="px-3 py-1 rounded-md border border-slate-200 text-xs md:text-sm text-slate-700 disabled:opacity-50 hover:bg-white transition"
                 >
                   Prev
                 </button>
 
-                <div className="flex flex-wrap items-center gap-1 md:gap-2">
+                <div className="flex items-center gap-1">
                   {Array.from({ length: totalPages }).map((_, idx) => {
                     const n = idx + 1;
                     return (
                       <button
                         key={n}
-                        onClick={() => goTo(n)}
+                        onClick={() => handlePageChange(n)}
+                        disabled={isSwitchingPage}
                         className={`w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-md text-xs md:text-sm border transition ${
                           n === page
                             ? "bg-indigo-600 text-white border-indigo-600"
@@ -310,8 +310,8 @@ export default function Page() {
                 </div>
 
                 <button
-                  onClick={goNext}
-                  disabled={page === totalPages}
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page === totalPages || isSwitchingPage}
                   className="px-3 py-1 rounded-md border border-slate-200 text-xs md:text-sm text-slate-700 disabled:opacity-50 hover:bg-white transition"
                 >
                   Next

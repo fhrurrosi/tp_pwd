@@ -12,7 +12,7 @@ export default function TabelRuanganTersedia({
   if (ruangan.length === 0) {
     return (
       <div className="mt-8 p-10 text-center bg-white border border-slate-200 rounded-xl shadow-sm">
-        <p className="text-slate-500">Tidak ada ruangan yang tersedia untuk tanggal ini.</p>
+        <p className="text-slate-500">Tidak ada ruangan yang tersedia untuk hari ini.</p>
       </div>
     );
   }

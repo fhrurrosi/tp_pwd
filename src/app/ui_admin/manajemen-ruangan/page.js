@@ -416,7 +416,7 @@ export default function ManajemenRuanganPage() {
           </div>
 
           {!loading && rooms.length > 0 && (
-            <div className="flex flex-col sm:flex-row items-center gap-3 justify-between mt-4 pb-8">
+            <div className="flex flex-col  sm:flex-row items-center gap-3 justify-between mt-4 text-black pb-8">
               <div className="text-xs md:text-sm text-slate-600">
                 Halaman {page} dari {safeLastPage}
               </div>
