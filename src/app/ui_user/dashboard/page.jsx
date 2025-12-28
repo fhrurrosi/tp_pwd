@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Navigation from '../../components/nav_user';
 import TabelRuanganTersedia from './ruangan_tersedia';
-import TabelRuanganSkeleton from '../../components/TableRuanganSkeleton';
+
 
 export default function DashboardUser() {
   const [daftarRuangan, setDaftarRuangan] = useState([]);
@@ -12,6 +12,7 @@ export default function DashboardUser() {
 
   const ruanganPerHalaman = 6;
   const hariIni = new Date();
+
   useEffect(() => {
     async function fetchRuangan() {
       setLoading(true);
@@ -33,7 +34,7 @@ export default function DashboardUser() {
       } catch (error) {
         console.error("Error fetching:", error);
       } finally {
-        setLoading(false);
+        setTimeout(() => setLoading(false), 500);
       }
     }
 
@@ -72,17 +73,13 @@ export default function DashboardUser() {
             </span>
           </p>
         </div>
-
-        {loading ? (
-          <TabelRuanganSkeleton rows={ruanganPerHalaman} />
-        ) : (
-          <TabelRuanganTersedia
-            ruangan={ruanganTerpaginasi} 
-            halamanSaatIni={halamanSaatIni}
-            totalHalaman={totalHalaman}
-            padaPerubahanHalaman={tanganiPerubahanHalaman}
-          />
-        )}
+        <TabelRuanganTersedia
+          ruangan={ruanganTerpaginasi} 
+          loading={loading} 
+          halamanSaatIni={halamanSaatIni}
+          totalHalaman={totalHalaman}
+          padaPerubahanHalaman={tanganiPerubahanHalaman}
+        />
       </main>
     </div>
   );

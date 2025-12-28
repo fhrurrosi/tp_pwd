@@ -17,7 +17,7 @@ export async function GET(request) {
             tanggalBooking: isoDate,
             
             status: {
-              notIn: ['Ditolak', 'Batal']
+              notIn: ['Rejected']
             }
           }
         }

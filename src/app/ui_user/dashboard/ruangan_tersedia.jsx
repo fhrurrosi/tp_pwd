@@ -6,9 +6,62 @@ export default function TabelRuanganTersedia({
   ruangan, 
   halamanSaatIni = 1, 
   totalHalaman = 1, 
-  padaPerubahanHalaman = () => {} 
+  padaPerubahanHalaman = () => {},
+  loading = false 
 }) {
-  
+    if (loading) {
+    return (
+      <div className="mt-8">
+        <div className="grid grid-cols-1 gap-4 md:hidden animate-pulse">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-4">
+              <div className="flex justify-between items-start">
+                <div className="space-y-2 w-2/3">
+                  <div className="h-5 bg-gray-200 rounded w-full" />
+                  <div className="h-3 bg-gray-100 rounded w-1/2" />
+                </div>
+                <div className="h-6 bg-gray-100 rounded-full w-16" />
+              </div>
+              <div className="space-y-3 border-t border-slate-50 pt-3">
+                <div className="h-4 bg-gray-100 rounded w-3/4" />
+                <div className="h-4 bg-gray-100 rounded w-1/2" />
+              </div>
+              <div className="mt-2 h-10 bg-gray-200 rounded-lg w-full" />
+            </div>
+          ))}
+        </div>
+        <div className="hidden md:block bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-lg animate-pulse">
+          <table className="w-full table-fixed">
+            <thead>
+              <tr className="bg-gray-100 border-b border-gray-200">
+                {[...Array(5)].map((_, i) => (
+                  <th key={i} className="px-6 py-4">
+                    <div className="h-4 bg-gray-300 rounded w-3/4 mx-auto" />
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {[...Array(5)].map((_, rowIndex) => (
+                <tr key={rowIndex}>
+                  {[...Array(5)].map((_, colIndex) => (
+                    <td key={colIndex} className="px-6 py-4">
+                      <div className="h-4 bg-gray-200 rounded w-full" />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="px-6 py-5 border-t border-gray-200 flex justify-center gap-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="w-10 h-10 bg-gray-200 rounded-xl" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (ruangan.length === 0) {
     return (
       <div className="mt-8 p-10 text-center bg-white border border-slate-200 rounded-xl shadow-sm">
@@ -16,20 +69,18 @@ export default function TabelRuanganTersedia({
       </div>
     );
   }
-
   return (
     <div className="mt-8 flex flex-col gap-4">
 
       <div className="grid grid-cols-1 gap-4 md:hidden">
         {ruangan.map((item, indeks) => (
           <div key={indeks} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-4">
-            
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="font-bold text-slate-900 text-lg">{item.name}</h3>
                 <p className="text-xs text-slate-500 mt-1">{item.location}</p>
               </div>
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
                 Tersedia
               </span>
@@ -59,7 +110,6 @@ export default function TabelRuanganTersedia({
           </div>
         ))}
       </div>
-
       <div className="hidden md:block bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -111,53 +161,53 @@ export default function TabelRuanganTersedia({
             </tbody>
           </table>
         </div>
-      </div>
 
-      {totalHalaman > 1 && (
-        <div className="px-4 py-4 md:px-6 border-t md:border border-slate-200 bg-transparent md:bg-white rounded-b-xl flex flex-col md:flex-row items-center justify-between gap-4">
-          
-          <span className="text-sm text-slate-500 order-2 md:order-1">
-            Halaman <span className="font-medium text-slate-900">{halamanSaatIni}</span> dari {totalHalaman}
-          </span>
+        {/* Pagination Desktop */}
+        {totalHalaman > 1 && (
+          <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+            <span className="text-sm text-slate-500">
+              Halaman <span className="font-medium text-slate-900">{halamanSaatIni}</span> dari {totalHalaman}
+            </span>
 
-          <div className="flex items-center gap-2 order-1 md:order-2">
-            <button 
-              onClick={() => padaPerubahanHalaman(halamanSaatIni - 1)}
-              disabled={halamanSaatIni === 1}
-              className="px-3 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Prev
-            </button>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => padaPerubahanHalaman(halamanSaatIni - 1)}
+                disabled={halamanSaatIni === 1}
+                className="px-3 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Prev
+              </button>
 
-            <div className="flex gap-1">
-              {Array.from({ length: totalHalaman }).map((_, i) => {
-                const num = i + 1;
-                return (
-                   <button
-                      key={num}
-                      onClick={() => padaPerubahanHalaman(num)}
-                      className={`w-8 h-8 flex items-center justify-center rounded-md text-sm font-medium transition-colors ${
-                        halamanSaatIni === num
-                          ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'bg-white text-slate-600 border border-slate-300 hover:bg-slate-50'
-                      } ${ totalHalaman > 5 && num !== halamanSaatIni ? 'hidden sm:flex' : 'flex' }`} 
-                    >
-                      {num}
-                    </button>
-                );
-              })}
+              <div className="flex gap-1">
+                {Array.from({ length: totalHalaman }).map((_, i) => {
+                  const num = i + 1;
+                  return (
+                     <button
+                        key={num}
+                        onClick={() => padaPerubahanHalaman(num)}
+                        className={`w-8 h-8 flex items-center justify-center rounded-md text-sm font-medium transition-colors ${
+                          halamanSaatIni === num
+                            ? 'bg-indigo-600 text-white shadow-sm'
+                            : 'bg-white text-slate-600 border border-slate-300 hover:bg-slate-50'
+                        } ${ totalHalaman > 5 && num !== halamanSaatIni ? 'hidden sm:flex' : 'flex' }`} 
+                      >
+                        {num}
+                      </button>
+                  );
+                })}
+              </div>
+
+              <button 
+                onClick={() => padaPerubahanHalaman(halamanSaatIni + 1)}
+                disabled={halamanSaatIni === totalHalaman}
+                className="px-3 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
             </div>
-
-            <button 
-              onClick={() => padaPerubahanHalaman(halamanSaatIni + 1)}
-              disabled={halamanSaatIni === totalHalaman}
-              className="px-3 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Next
-            </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
