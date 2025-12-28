@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Navigation from "@/app/components/nav_admin";
 import Swal from "sweetalert2";
+
 export default function ManajemenRuanganPage() {
   const router = useRouter();
 
@@ -125,25 +126,30 @@ export default function ManajemenRuanganPage() {
 
   return (
     <>
-    <Navigation />
-      <main className="min-h-screen p-6 bg-[#F8FAFC] font-sans">
+      <Navigation />
+      <main className="min-h-screen p-3 md:p-6 bg-[#F8FAFC] font-sans">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold text-black">
-              Manajemen Ruangan
-            </h1>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+              <h1 className="text-xl md:text-2xl font-semibold text-black">
+                Manajemen Ruangan
+              </h1>
+              <p className="text-xs md:text-sm text-slate-500 mt-1">
+                Kelola daftar ruangan yang tersedia
+              </p>
+            </div>
             <button
               onClick={addRoom}
-              className="text-sm bg-white border border-indigo-600 text-indigo-600 px-3 py-2 rounded-md hover:bg-indigo-50"
+              className="text-sm w-full md:w-auto bg-white border border-indigo-600 text-indigo-600 px-4 py-2.5 rounded-lg hover:bg-indigo-50 font-medium transition-colors shadow-sm"
             >
-              Tambahkan Ruangan
+              + Tambahkan Ruangan
             </button>
           </div>
 
-          <div className="mt-6 rounded-lg overflow-hidden border border-slate-100 bg-white">
-            <div className="w-full overflow-x-auto min-h-[300px]">
+          <div className="rounded-lg border border-slate-100 bg-white overflow-hidden shadow-sm">
+            <div className="hidden md:block w-full overflow-x-auto min-h-[300px]">
               <table className="w-full min-w-[750px] table-auto">
-                <thead className="bg-white border-b border-slate-200">
+                <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
                     <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">
                       Ruangan
@@ -292,47 +298,164 @@ export default function ManajemenRuanganPage() {
                 </tbody>
               </table>
             </div>
-          </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-3 justify-between mt-4">
-            <div className="text-sm text-slate-600">
-              Halaman {page} dari {safeLastPage}
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={goPrev}
-                disabled={page === 1}
-                className="px-3 py-1 rounded-md border border-slate-200 text-sm disabled:opacity-50"
-              >
-                Sebelumnya
-              </button>
-              <div className="flex gap-2">
-                {Array.from({ length: safeLastPage }, (_, i) => i + 1).map(
-                  (n) => (
-                    <button
-                      key={n}
-                      onClick={() => goTo(n)}
-                      className={`px-3 py-1 rounded-md text-sm border ${
-                        n === page
-                          ? "bg-indigo-600 text-white border-indigo-600"
-                          : "bg-white border-slate-200"
-                      }`}
+            <div className="block md:hidden">
+              {loading ? (
+                <div className="p-4 space-y-4">
+                  {[...Array(3)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="bg-slate-50 p-4 rounded-lg animate-pulse"
                     >
-                      {n}
-                    </button>
-                  )
-                )}
-              </div>
-              <button
-                onClick={goNext}
-                disabled={page >= safeLastPage}
-                className="px-3 py-1 rounded-md border border-slate-200 text-sm disabled:opacity-50"
-              >
-                Berikutnya
-              </button>
+                      <div className="h-4 bg-slate-200 rounded w-1/2 mb-2"></div>
+                      <div className="h-3 bg-slate-200 rounded w-3/4"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : rooms.length === 0 ? (
+                <div className="p-8 text-center text-slate-500 text-sm">
+                  Data tidak ditemukan
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {rooms.map((r) => (
+                    <div key={r.id} className="p-4 hover:bg-slate-50">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="text-sm font-semibold text-slate-800">
+                            {r.namaRuangan}
+                          </h3>
+                          <p className="text-xs text-slate-500">{r.lokasi}</p>
+                        </div>
+                        <div className="relative">
+                          <button
+                            onClick={() => toggleDropdown(r.id)}
+                            className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide border ${
+                              r.status === "Tersedia"
+                                ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                                : "bg-red-100 text-red-700 border-red-200"
+                            }`}
+                          >
+                            {r.status} ▾
+                          </button>
+                          {openDropdown === r.id && (
+                            <>
+                              <div
+                                className="fixed inset-0 z-10"
+                                onClick={() => setOpenDropdown(null)}
+                              />
+                              <div className="absolute right-0 mt-1 z-20 w-36 bg-white border border-slate-200 rounded-md shadow-xl">
+                                <button
+                                  onClick={() => {
+                                    setPendingChange({
+                                      id: r.id,
+                                      nextStatus: true,
+                                    });
+                                    setOpenDropdown(null);
+                                  }}
+                                  className="block w-full text-left px-4 py-2 text-xs hover:bg-emerald-50 text-emerald-700"
+                                >
+                                  Set Tersedia
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setPendingChange({
+                                      id: r.id,
+                                      nextStatus: false,
+                                    });
+                                    setOpenDropdown(null);
+                                  }}
+                                  className="block w-full text-left px-4 py-2 text-xs hover:bg-red-50 text-red-700"
+                                >
+                                  Set Tidak Tersedia
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 my-3">
+                        <div className="bg-slate-50 p-2 rounded border border-slate-100">
+                          <span className="block text-[10px] uppercase text-slate-400 font-semibold">
+                            Kapasitas
+                          </span>
+                          <span className="text-xs text-slate-700 font-medium">
+                            {r.kapasitas} Orang
+                          </span>
+                        </div>
+                        <div className="bg-slate-50 p-2 rounded border border-slate-100">
+                          <span className="block text-[10px] uppercase text-slate-400 font-semibold">
+                            Jam
+                          </span>
+                          <span className="text-xs text-slate-700 font-medium">
+                            {r.jamMulai} - {r.jamSelesai}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={() => goToEdit(r.id)}
+                          className="flex-1 py-1.5 text-xs text-indigo-600 border border-indigo-200 rounded bg-indigo-50 font-medium hover:bg-indigo-100"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => openDeleteModal(r.id)}
+                          className="flex-1 py-1.5 text-xs text-red-600 border border-red-200 rounded bg-red-50 font-medium hover:bg-red-100"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
+
+          {!loading && rooms.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center gap-3 justify-between mt-4 pb-8">
+              <div className="text-xs md:text-sm text-slate-600">
+                Halaman {page} dari {safeLastPage}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={goPrev}
+                  disabled={page === 1}
+                  className="px-3 py-1.5 rounded-md border border-slate-200 text-xs md:text-sm disabled:opacity-50 hover:bg-white"
+                >
+                  Prev
+                </button>
+                <div className="flex gap-1">
+                  {Array.from({ length: safeLastPage }, (_, i) => i + 1).map(
+                    (n) => (
+                      <button
+                        key={n}
+                        onClick={() => goTo(n)}
+                        className={`w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-md text-xs md:text-sm border ${
+                          n === page
+                            ? "bg-indigo-600 text-white border-indigo-600"
+                            : "bg-white border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        {n}
+                      </button>
+                    )
+                  )}
+                </div>
+                <button
+                  onClick={goNext}
+                  disabled={page >= safeLastPage}
+                  className="px-3 py-1.5 rounded-md border border-slate-200 text-xs md:text-sm disabled:opacity-50 hover:bg-white"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {pendingChange && (

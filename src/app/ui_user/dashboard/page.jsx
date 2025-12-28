@@ -19,8 +19,6 @@ export default function DashboardUser() {
         const offset = hariIni.getTimezoneOffset();
         const localDate = new Date(hariIni.getTime() - (offset * 60 * 1000));
         const dateStr = localDate.toISOString().split('T')[0]; 
-
-        console.log("Fetching data untuk tanggal:", dateStr);
         const res = await fetch(`/api/rooms/available?date=${dateStr}`, {
            cache: 'no-store'
         });
