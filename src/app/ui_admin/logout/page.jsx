@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
-import Navigation from '@/app/components/nav_user';
+import Navigation from '@/app/components/nav_admin';
 import { LogOut, ShieldAlert } from 'lucide-react';
 
 export default function Page() {
@@ -11,7 +11,7 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
 
   const batalLogout = () => {
-    router.push('/ui_user/dashboard');
+    router.push('/ui_admin/dashboard');
   };
 
   const logout = async () => {

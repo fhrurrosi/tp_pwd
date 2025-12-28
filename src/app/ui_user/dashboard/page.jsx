@@ -42,8 +42,6 @@ export default function DashboardUser() {
     fetchRuangan();
   }, []); 
 
-  // ... (Sisa kode pagination dan return UI sama persis, tidak perlu diubah)
-  // ...
   const totalHalaman = Math.ceil(daftarRuangan.length / ruanganPerHalaman);
   const indeksAwal = (halamanSaatIni - 1) * ruanganPerHalaman;
   const indeksAkhir = indeksAwal + ruanganPerHalaman;

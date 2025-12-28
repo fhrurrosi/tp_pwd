@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from "next-auth/react";
+import Image from 'next/image';
 export default function Navigation() {
-  //  Mendapatkan pathname saat ini untuk menentukan link yang aktif
   const jalurSaatIni = usePathname();
   const { data: session } = useSession();
 
@@ -14,8 +14,16 @@ export default function Navigation() {
     <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50" role="navigation" aria-label="Navigasi utama">
       <div className="max-w-7xl mx-auto px-8 py-4">
         <div className="flex items-center justify-between">
-          <div className="text-2xl font-bold text-gray-900 tracking-tight" role="banner">logo</div>
-
+          <Link href="/ui_user/dashboard" role="banner">
+            <Image
+              src="/logo.png"
+              alt="Logo Tempatin"
+              width={150}
+              height={40}
+              className="object-contain"
+              priority
+            />
+          </Link>
           <div className="flex items-center gap-8">
             <Link
               href="/ui_user/dashboard"

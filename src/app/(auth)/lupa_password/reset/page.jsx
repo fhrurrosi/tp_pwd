@@ -1,19 +1,76 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Swal from "sweetalert2";
 
-export default function ResetPasswordPage() {
+
+function ResetForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false); 
   const router = useRouter();
+  
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email");
+  const token = searchParams.get("token"); 
 
   const canSubmit = password.length >= 6 && password === confirmPassword;
 
-  function handleSubmit(e) {
+  useEffect(() => {
+    if (!email || !token) {
+      Swal.fire("Error", "Akses tidak sah. Silakan ulangi proses lupa password.", "error")
+        .then(() => router.push("/lupa_password"));
+    }
+  }, [email, token, router]);
+
+  async function handleSubmit(e) {
     e.preventDefault();
-    // 
-    router.push("/login");
+
+    if (!canSubmit) return;
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/2FA/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            email: email, 
+            otp: token,        
+            newPassword: password
+        })
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        await Swal.fire({
+          icon: 'success',
+          title: 'Berhasil!',
+          text: 'Password telah diubah. Silakan login dengan password baru.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        router.push("/login");
+
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal',
+          text: result.message,
+        });
+      }
+
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Terjadi kesalahan sistem',
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -28,7 +85,7 @@ export default function ResetPasswordPage() {
         </section>
 
         <section className="p-8">
-          <h1 className="text-2xl text-black font-semibold mb-2">Reset Password</h1>
+          <h1 className="text-2xl text-black font-semibold mb-2">Password Baru</h1>
           <p className="text-sm text-[#64748B] mb-6">
             Masukkan password baru Anda dan konfirmasi.
           </p>
@@ -61,20 +118,28 @@ export default function ResetPasswordPage() {
 
             <button
               type="submit"
-              disabled={!canSubmit}
+              disabled={!canSubmit || loading}
               className={`w-full py-2 rounded-md font-semibold text-white transition ${
-                canSubmit ? "bg-indigo-600 hover:bg-indigo-700" : "bg-slate-300 cursor-not-allowed"
+                canSubmit && !loading ? "bg-indigo-600 hover:bg-indigo-700" : "bg-slate-300 cursor-not-allowed"
               }`}
             >
-              Simpan Password
+              {loading ? "Menyimpan..." : "Simpan Password"}
             </button>
 
             <a href="/login" className="block text-center text-sm text-indigo-600 hover:text-indigo-700">
-              Kembali ke login
+              Batal / Kembali ke Login
             </a>
           </form>
         </section>
       </div>
     </main>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ResetForm />
+    </Suspense>
   );
 }

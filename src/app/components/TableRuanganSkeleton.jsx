@@ -28,7 +28,6 @@ export default function TabelRuanganSkeleton({ rows = 5 }) {
           </tbody>
         </table>
 
-        {/* Skeleton pagination */}
         <div className="px-6 py-5 border-t border-gray-200 flex justify-center gap-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <div

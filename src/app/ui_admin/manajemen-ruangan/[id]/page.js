@@ -9,13 +9,12 @@ export default function EditRuanganPage() {
   const router = useRouter()
   const id = params?.id
 
-  // State Form (Langsung ada jamMulai dan jamSelesai)
   const [form, setForm] = useState({
     name: "",
     location: "",
     capacity: "",
-    jamMulai: "",   // Ditambah
-    jamSelesai: "", // Ditambah
+    jamMulai: "",   
+    jamSelesai: "",
     facilities: {
       ac: false,
       projector: false,
@@ -26,7 +25,6 @@ export default function EditRuanganPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  // 1. Fetch Data Ruangan
   useEffect(() => {
     async function fetchRoomData() {
       if (!id) return
@@ -41,12 +39,10 @@ export default function EditRuanganPage() {
         
         const data = await res.json()
 
-        // Set Form dengan data dari database
         setForm({
           name: data.namaRuangan || "",
           location: data.lokasi || "",
           capacity: data.kapasitas || "",
-          // Ambil jam langsung dari root object data
           jamMulai: data.jamMulai || "07:00", 
           jamSelesai: data.jamSelesai || "09:00",
           facilities: {
@@ -68,17 +64,14 @@ export default function EditRuanganPage() {
     fetchRoomData()
   }, [id, router])
 
-  // 2. Handle Perubahan Input
   function handleChange(e) {
     const { name, value, type, checked } = e.target
     
-    // Handle Checkbox Fasilitas
     if (name in form.facilities) {
       setForm((prev) => ({ ...prev, facilities: { ...prev.facilities, [name]: checked } }))
       return
     }
     
-    // Handle Input Biasa
     setForm((prev) => ({ ...prev, [name]: type === "number" ? Number(value) : value }))
   }
 
@@ -86,7 +79,6 @@ export default function EditRuanganPage() {
     router.push("/ui_admin/manajemen-ruangan")
   }
 
-  // 3. Simpan Perubahan (PATCH)
   async function onSave(e) {
     e.preventDefault()
     setSaving(true)
@@ -96,8 +88,8 @@ export default function EditRuanganPage() {
         name: form.name,
         location: form.location,
         capacity: Number(form.capacity),
-        jamMulai: form.jamMulai,     // Kirim Jam
-        jamSelesai: form.jamSelesai, // Kirim Jam
+        jamMulai: form.jamMulai,     
+        jamSelesai: form.jamSelesai, 
         facilities: form.facilities,
       }
 
@@ -144,7 +136,6 @@ export default function EditRuanganPage() {
 
         <form onSubmit={onSave} className="space-y-6">
           
-          {/* INFORMASI DASAR */}
           <div className="space-y-4 border-b border-slate-100 pb-6">
             <h3 className="text-lg font-medium text-slate-800">Informasi Ruangan</h3>
             <div>
@@ -182,7 +173,6 @@ export default function EditRuanganPage() {
             </div>
           </div>
 
-          {/* JAM OPERASIONAL (SIMPLE INPUT) */}
           <div className="space-y-4 border-b border-slate-100 pb-6">
             <h3 className="text-lg font-medium text-slate-800">Waktu Operasional</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -211,7 +201,6 @@ export default function EditRuanganPage() {
             </div>
           </div>
 
-          {/* FASILITAS */}
           <fieldset className="border border-slate-200 rounded-md p-4 bg-slate-50">
             <legend className="text-sm font-medium text-black px-2">Fasilitas Pendukung</legend>
             <div className="flex flex-wrap gap-4 mt-1">
