@@ -1,15 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Swal from 'sweetalert2';
 import Navigation from '../../components/nav_user';
 import { supabase } from '@/lib/supabaseClient';
-
-
 import { useSession } from "next-auth/react";
 
-export default function HalamanFormPeminjaman() {
+function IsiFormulir() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -78,11 +76,11 @@ export default function HalamanFormPeminjaman() {
     setSubmitting(true);
 
     if (!session || !session.user) {
-        Swal.fire("Error", "Sesi user tidak valid. Silakan login ulang.", "error");
-        setSubmitting(false);
-        return;
+      Swal.fire("Error", "Sesi user tidak valid. Silakan login ulang.", "error");
+      setSubmitting(false);
+      return;
     }
-    const userId = session.user.id; 
+    const userId = session.user.id;
 
     try {
       let dokumenUrl = null;
@@ -106,7 +104,7 @@ export default function HalamanFormPeminjaman() {
 
       const payload = {
         ruanganId: ruanganIdParam,
-        userId: userId, 
+        userId: userId,
         tanggal: tanggalParam,
         keperluan: formData.keperluan,
         dokumenPath: dokumenUrl
@@ -273,5 +271,18 @@ export default function HalamanFormPeminjaman() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function HalamanFormPeminjaman() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <span className="ml-3 text-blue-600 font-semibold">Memuat formulir...</span>
+      </div>
+    }>
+      <IsiFormulir />
+    </Suspense>
   );
 }
