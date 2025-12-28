@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-
+import Image from 'next/image';
 const NAV_ITEMS = [
   {
     label: 'Dashboard',
@@ -45,8 +45,16 @@ export default function Navigation() {
     <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-8 py-4">
         <div className="flex items-center justify-between">
-          <div className="text-2xl font-bold text-gray-900">logo</div>
-
+          <Link href="/ui_admin/dashboard" role="banner">
+            <Image
+              src="/logo.png"
+              alt="Logo Tempatin"
+              width={150}
+              height={40}
+              className="object-contain"
+              priority
+            />
+          </Link>
           <div className="flex items-center gap-8">
             {NAV_ITEMS.map((item) => {
               const isActive = pathname === item.href;
